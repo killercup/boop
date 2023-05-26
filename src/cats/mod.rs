@@ -6,7 +6,8 @@ use tracing::instrument;
 
 use crate::{
     gameplay::events::NewCat,
-    grid::{Grid, GridCell, Map, MapSettings},
+    grid::{GridCell, Map, MapSettings},
+    players::PlayerId,
 };
 
 #[derive(Debug, Clone, Copy, Default, Component, Reflect)]
@@ -44,8 +45,10 @@ impl Plugin for CatPlugin {
 #[reflect(Resource)]
 struct CatAssets {
     mesh: Handle<Gltf>,
-    kitten_material: Handle<StandardMaterial>,
-    adult_material: Handle<StandardMaterial>,
+    /// Material for kittens for the different players
+    kitten_material: [Handle<StandardMaterial>; 2],
+    /// Material for adult cats for the different players
+    adult_material: [Handle<StandardMaterial>; 2],
 }
 
 fn load_gltf(
@@ -56,46 +59,65 @@ fn load_gltf(
     let gltf = assets.load("models/cats.glb");
     commands.insert_resource(CatAssets {
         mesh: gltf,
-        kitten_material: materials.add(StandardMaterial {
-            base_color: Color::LIME_GREEN,
-            ..default()
-        }),
-        adult_material: materials.add(StandardMaterial {
-            base_color: Color::ORANGE,
-            ..default()
-        }),
+        kitten_material: [
+            materials.add(StandardMaterial {
+                base_color: Color::LIME_GREEN,
+                ..default()
+            }),
+            materials.add(StandardMaterial {
+                base_color: Color::ORANGE,
+                ..default()
+            }),
+        ],
+        adult_material: [
+            materials.add(StandardMaterial {
+                base_color: Color::DARK_GREEN,
+                ..default()
+            }),
+            materials.add(StandardMaterial {
+                base_color: Color::ORANGE_RED,
+                ..default()
+            }),
+        ],
     });
 }
 
 #[instrument(level = "debug", skip_all)]
 fn spawn_cats(
-    mut new_cats: EventReader<NewCat>,
-    mut commands: Commands,
     settings: Res<MapSettings>,
-    map: Res<Map>,
-    cells: Query<(&GridCell, &Transform)>,
     cat_assets: Res<CatAssets>,
     assets_gltf: Res<Assets<Gltf>>,
     assets_gltfmesh: Res<Assets<GltfMesh>>,
+    mut new_cats: EventReader<NewCat>,
+    mut commands: Commands,
+    mut map: ResMut<Map>,
+    cells: Query<(&GridCell, &Transform)>,
 ) {
     // GLTF has not loaded? very bad
     let Some(gltf) = assets_gltf.get(&cat_assets.mesh) else {
         panic!("cat meshes not done loading!");
     };
 
-    for NewCat { cat, position, .. } in new_cats.iter() {
+    for NewCat {
+        cat,
+        position,
+        player,
+        ..
+    } in new_cats.iter()
+    {
+        let player_idx = if *player == PlayerId::new(0) { 0 } else { 1 };
         let (mesh, material) = match cat {
             Cat::Kitten => (
                 assets_gltfmesh.get(&gltf.meshes[0]).unwrap().primitives[0]
                     .mesh
                     .clone(),
-                cat_assets.kitten_material.clone(),
+                cat_assets.kitten_material[player_idx].clone(),
             ),
             Cat::Adult => (
                 assets_gltfmesh.get(&gltf.meshes[1]).unwrap().primitives[0]
                     .mesh
                     .clone(),
-                cat_assets.adult_material.clone(),
+                cat_assets.adult_material[player_idx].clone(),
             ),
         };
 
@@ -121,17 +143,22 @@ fn spawn_cats(
         // make cats bigger!
         transform.scale = Vec3::splat(2.);
 
-        commands.spawn((
-            PbrBundle {
-                mesh,
-                material,
-                transform,
-                ..default()
-            },
-            Name::from("Kitten"),
-            *cell,
-            Meowple,
-            *cat,
-        ));
+        let new_meople = commands
+            .spawn((
+                PbrBundle {
+                    mesh,
+                    material,
+                    transform,
+                    ..default()
+                },
+                Name::from("Kitten"),
+                *cell,
+                Meowple,
+                *cat,
+                *player,
+            ))
+            .id();
+
+        map.add_cat(cell.0, new_meople);
     }
 }

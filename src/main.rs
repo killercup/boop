@@ -57,8 +57,6 @@ fn install_tracing(verbose: bool) {
         .init();
 }
 
-mod cat_meshes;
-
 fn setup(mut commands: Commands) {
     let transform = Transform::from_xyz(0.0, 60.0, 60.0).looking_at(Vec3::ZERO, Vec3::Y);
     commands.spawn((

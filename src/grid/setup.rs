@@ -65,7 +65,10 @@ pub fn setup_grid(
         .entity(parent)
         .push_children(&entities.values().copied().collect::<Vec<_>>());
 
-    commands.insert_resource(Map { entities });
+    commands.insert_resource(Map {
+        cells: entities,
+        cats: default(),
+    });
     commands.insert_resource(MapMaterials {
         highlighted_material,
         default_material,

@@ -8,7 +8,8 @@ use crate::cats::Cat;
 
 pub mod events;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Reflect, FromReflect)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Reflect, FromReflect, Component)]
+#[reflect(Component)]
 pub struct PlayerId(u8);
 
 impl PlayerId {
@@ -74,6 +75,12 @@ impl Players {
             debug!("No more kittens");
             None
         }
+    }
+
+    pub fn gain_kitten(&mut self, player: PlayerId) {
+        let mut player = self.players.iter_mut().find(|p| p.id == player).unwrap();
+        debug!("More kittens!");
+        player.inventory.kittens += 1;
     }
 
     pub fn take_cat(&mut self) -> Option<Cat> {

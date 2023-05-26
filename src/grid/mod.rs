@@ -24,18 +24,39 @@ impl Plugin for HexGridPlugin {
 #[reflect(Resource)]
 pub struct Map {
     /// Hex grid
-    entities: HashMap<Hex, Entity>,
+    cells: HashMap<Hex, Entity>,
+    /// cats
+    cats: HashMap<Hex, Option<Entity>>,
 }
 
 impl Map {
     pub fn cell_by_hex(&self, hex: Hex) -> Option<Entity> {
-        self.entities.get(&hex).copied()
+        self.cells.get(&hex).copied()
     }
 
     pub fn cell_by_entity(&self, entity: Entity) -> Option<Hex> {
-        self.entities
+        self.cells
             .iter()
             .find_map(|(hex, e)| if *e == entity { Some(*hex) } else { None })
+    }
+
+    pub fn cat_by_hex(&self, hex: Hex) -> Option<Entity> {
+        self.cats.get(&hex).copied().flatten()
+    }
+
+    pub fn cat_by_entity(&self, entity: Entity) -> Option<Hex> {
+        self.cats.iter().find_map(|(hex, e)| match e {
+            Some(x) if *x == entity => Some(*hex),
+            _ => None,
+        })
+    }
+
+    pub fn add_cat(&mut self, hex: Hex, cat: Entity) {
+        self.cats.insert(hex, Some(cat));
+    }
+
+    pub fn clear_cat_cell(&mut self, hex: Hex) {
+        self.cats.remove(&hex);
     }
 }
 
@@ -45,7 +66,7 @@ pub struct Grid;
 
 #[derive(Debug, Clone, Copy, Default, Component, Reflect)]
 #[reflect(Component)]
-pub struct GridCell(Hex);
+pub struct GridCell(pub Hex);
 
 impl std::ops::Deref for GridCell {
     type Target = Hex;
