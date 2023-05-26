@@ -6,8 +6,6 @@ pub use plugin::*;
 
 use crate::cats::Cat;
 
-pub mod events;
-
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Reflect, FromReflect, Component)]
 #[reflect(Component)]
 pub struct PlayerId(u8);

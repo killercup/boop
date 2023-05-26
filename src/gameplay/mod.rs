@@ -7,24 +7,17 @@ use tracing::instrument;
 
 use crate::{
     cats::{Cat, Meowple},
-    grid::{events::GridCellClicked, GridCell, Map, MapSettings},
-    players::{events::NextPlayer, PlayerId, Players},
+    events::{GridCellClicked, MoveCat, NewCat, NextPlayer, ResetGameEvent},
+    grid::{GridCell, Map, MapSettings},
+    players::{PlayerId, Players},
 };
-
-use self::events::{MoveCat, NewCat, ResetGameEvent};
-
-pub mod events;
 
 pub struct GamePlayPlugin;
 
 impl Plugin for GamePlayPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<ResetGameEvent>();
-        app.add_event::<NewCat>();
-        app.add_event::<MoveCat>();
-
         app.add_startup_system(setup);
-        app.add_system(reset_game.run_if(on_event::<events::ResetGameEvent>()));
+        app.add_system(reset_game.run_if(on_event::<ResetGameEvent>()));
         app.add_system(place_kitten.run_if(on_event::<GridCellClicked>()));
         app.add_system(boop_plan.run_if(on_event::<NewCat>()));
         app.add_system(move_cat.run_if(on_event::<MoveCat>()));
@@ -121,7 +114,6 @@ fn boop_plan(
 ) {
     for NewCat {
         cat: new_cat,
-        cell,
         position,
         ..
     } in new_cats.iter()
@@ -146,7 +138,7 @@ fn boop_plan(
         let boopable_neighbors =
             neighbors_with_cats.filter(|((.., other_cat), ..)| new_cat.can_boop(**other_cat));
 
-        for ((boopee, cat), boopee_cell, direction) in boopable_neighbors {
+        for ((boopee, _cat), boopee_cell, direction) in boopable_neighbors {
             let possible_boop_destination = boopee_cell + direction;
 
             match map.cell_by_hex(possible_boop_destination) {

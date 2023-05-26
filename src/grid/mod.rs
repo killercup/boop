@@ -1,7 +1,6 @@
 use bevy::{prelude::*, utils::HashMap};
 use hexx::Hex;
 
-pub mod events;
 mod setup;
 
 pub struct HexGridPlugin;
@@ -12,8 +11,6 @@ impl Plugin for HexGridPlugin {
         app.register_type::<MapSettings>();
         app.register_type::<GridCell>();
         app.register_type::<Grid>();
-
-        app.add_event::<events::GridCellClicked>();
 
         app.init_resource::<MapSettings>();
         app.add_startup_system(setup::setup_grid);
@@ -74,12 +71,6 @@ impl std::ops::Deref for GridCell {
     fn deref(&self) -> &Self::Target {
         &self.0
     }
-}
-
-#[derive(Debug, Default, Resource)]
-pub struct MapMaterials {
-    highlighted_material: Handle<StandardMaterial>,
-    default_material: Handle<StandardMaterial>,
 }
 
 #[derive(Debug, Resource, Reflect)]

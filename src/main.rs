@@ -3,6 +3,8 @@ use bevy_mod_picking::prelude::*;
 use bevy_tweening::TweeningPlugin;
 use tracing_subscriber::fmt::format::FmtSpan;
 
+use boop::events;
+
 fn main() {
     install_tracing(cfg!(debug_assertions));
 
@@ -19,8 +21,8 @@ fn main() {
         brightness: 0.1,
         ..default()
     });
-    app.add_startup_system(setup);
 
+    app.add_plugin(boop::events::EventsPlugin);
     app.add_plugin(boop::cats::CatPlugin);
     app.add_plugin(boop::grid::HexGridPlugin);
     app.add_plugin(boop::players::PlayerPlugin);
@@ -29,6 +31,7 @@ fn main() {
     #[cfg(feature = "dev")]
     app.add_plugin(bevy_editor_pls::EditorPlugin::default());
 
+    app.add_startup_system(setup);
     app.add_system(reset_game);
 
     app.run();
@@ -74,13 +77,8 @@ fn setup(mut commands: Commands) {
     });
 }
 
-fn reset_game(
-    keys: Res<Input<KeyCode>>,
-    mut reset_grid: EventWriter<boop::gameplay::events::ResetGameEvent>,
-    mut reset_players: EventWriter<boop::players::events::ResetPlayers>,
-) {
+fn reset_game(keys: Res<Input<KeyCode>>, mut reset_grid: EventWriter<events::ResetGameEvent>) {
     if keys.just_pressed(KeyCode::R) {
-        reset_grid.send(boop::gameplay::events::ResetGameEvent);
-        reset_players.send(boop::players::events::ResetPlayers);
+        reset_grid.send(events::ResetGameEvent);
     }
 }

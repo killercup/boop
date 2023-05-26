@@ -1,9 +1,8 @@
 use bevy::prelude::*;
 
-use super::{
-    events::{NextPlayer, ResetPlayers},
-    Player, PlayerId, Players,
-};
+use crate::events::{NextPlayer, ResetGameEvent};
+
+use super::{Player, PlayerId, Players};
 
 pub struct PlayerPlugin;
 
@@ -11,12 +10,10 @@ impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<Players>();
         app.register_type::<Players>();
-        app.add_event::<ResetPlayers>();
-        app.add_event::<NextPlayer>();
 
         app.add_startup_system(setup);
         app.add_system(show_players.run_if(resource_changed::<Players>()));
-        app.add_system(reset_players.run_if(on_event::<ResetPlayers>()));
+        app.add_system(reset_players.run_if(on_event::<ResetGameEvent>()));
         app.add_system(next_player.run_if(on_event::<NextPlayer>()));
     }
 }

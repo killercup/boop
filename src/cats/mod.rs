@@ -5,7 +5,7 @@ use bevy::{
 use tracing::instrument;
 
 use crate::{
-    gameplay::events::NewCat,
+    events::NewCat,
     grid::{GridCell, Map, MapSettings},
     players::PlayerId,
 };
