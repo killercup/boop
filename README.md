@@ -1,8 +1,18 @@
 # boop!
 
-**Why?** I saw [this TikTok](https://vm.tiktok.com/ZGJHJk3oM/) about [this game](https://boardgamegeek.com/boardgame/355433/boop). And I wanted to write a game again.
+A turn-based game about kittens that boop each other.
 
-## Rules
+## My Rules
+
+- hex grid
+- three kittens in a row = win
+
+## Origin
+
+I saw [this TikTok](https://vm.tiktok.com/ZGJHJk3oM/) about [this game](https://boardgamegeek.com/boardgame/355433/boop).
+And suddenly I wanted to write a game again!
+
+### Original Rules
 
 - board is 6x6
 - on your turn
@@ -16,15 +26,13 @@
 - three kittens (or 1-3 kittens and 1-2 cats) in the same color are removed from the board and turn into three cats
 - three cats in a row win
 
-## Random ideas
+### Random ideas
 
 - 3d with cute cat and kitten models
 - alternative rule: three kittens turn into one cat
 - alternative rule: kittens don't fall off but reappear on the other side of the board
-- hex grid version?
 
 ## todo
 
-- two teams
-- winning condition
-- cat inventory
+- pretty
+- adult cats
