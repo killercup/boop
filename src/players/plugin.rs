@@ -37,8 +37,6 @@ struct PlayerInfoPanel;
 struct PlayerInfo(PlayerId);
 
 fn setup(mut commands: Commands, fonts: Res<FontAssets>) {
-    let font = fonts.fira_sans.clone();
-
     commands
         .spawn((
             NodeBundle {
@@ -59,7 +57,7 @@ fn setup(mut commands: Commands, fonts: Res<FontAssets>) {
                 TextBundle::from_section(
                     "",
                     TextStyle {
-                        font: font.clone(),
+                        font: fonts.fira_sans.clone(),
                         font_size: 16.0,
                         color: Color::BLACK,
                     },
@@ -71,7 +69,7 @@ fn setup(mut commands: Commands, fonts: Res<FontAssets>) {
                 TextBundle::from_section(
                     "",
                     TextStyle {
-                        font: font.clone(),
+                        font: fonts.fira_sans.clone(),
                         font_size: 16.0,
                         color: Color::BLACK,
                     },
