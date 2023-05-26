@@ -46,7 +46,7 @@ fn setup(mut commands: Commands) {
         brightness: 0.1,
         ..default()
     });
-    let transform = Transform::from_xyz(0.0, 30.0, 60.0).looking_at(Vec3::ZERO, Vec3::Y);
+    let transform = Transform::from_xyz(0.0, 40.0, 40.0).looking_at(Vec3::ZERO, Vec3::Y);
     commands.spawn((
         Camera3dBundle {
             transform,
