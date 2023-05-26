@@ -77,13 +77,18 @@ pub fn plan(
 pub fn move_cat(
     mut moves: EventReader<MoveCat>,
     settings: Res<MapSettings>,
+    audio: Res<Audio>,
+    sounds: Res<AudioAssets>,
     mut players: ResMut<Players>,
     mut map: ResMut<Map>,
     mut commands: Commands,
     mut cats: Query<(Entity, &GridCell, &Transform, &PlayerId), With<Meowple>>,
     cells: Query<(&Transform,), (With<GridCell>, Without<Meowple>)>,
 ) {
+    let mut any_moves = false;
     for MoveCat { from, to } in moves.iter() {
+        any_moves = true;
+
         debug!(?from, ?to, "Moving cat");
         let (cat, cat_cell, cat_transform, player_id) = match cats.get_mut(*from) {
             Ok(x) => x,
@@ -120,5 +125,9 @@ pub fn move_cat(
             },
         );
         commands.entity(cat).insert(Animator::new(tween));
+    }
+
+    if any_moves {
+        audio.play(sounds.boop.clone());
     }
 }

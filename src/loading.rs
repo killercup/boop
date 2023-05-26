@@ -16,6 +16,7 @@ impl Plugin for LoadingPlugin {
         );
         app.add_collection_to_loading_state::<_, FontAssets>(GameState::Loading);
         app.add_collection_to_loading_state::<_, CatModel>(GameState::Loading);
+        app.add_collection_to_loading_state::<_, AudioAssets>(GameState::Loading);
 
         app.add_system(spawn_loading_animation.in_schedule(OnEnter(GameState::Loading)));
         app.add_system(remove_loading_animation.in_schedule(OnExit(GameState::Loading)));
@@ -100,6 +101,13 @@ fn remove_loading_animation(mut commands: Commands, query: Query<(Entity,), With
 pub struct FontAssets {
     #[asset(path = "fonts/FiraSans-Bold.ttf")]
     pub fira_sans: Handle<Font>,
+}
+
+#[derive(Debug, Default, AssetCollection, Resource, Reflect)]
+#[reflect(Resource)]
+pub struct AudioAssets {
+    #[asset(path = "sounds/boop.ogg")]
+    pub boop: Handle<AudioSource>,
 }
 
 #[derive(Debug, Default, AssetCollection, Resource, Reflect)]
