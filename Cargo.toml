@@ -13,7 +13,7 @@ bevy_mod_picking = { version = "0.13.0", features = [
     "highlight",
 ], default-features = false }
 bevy_tweening = "0.7.0"
-hexx = { version = "0.6.0", path = "/Users/pascal/code/ManevilleF/hexx", features = [
+hexx = { version = "0.6.0", git = "https://github.com/killercup/hexx", branch = "bevy_reflect", features = [
     "bevy_010_reflect",
 ] }
 tracing = "0.1.37"

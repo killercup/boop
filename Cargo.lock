@@ -2118,6 +2118,7 @@ checksum = "dfa686283ad6dd069f105e5ab091b04c62850d3e4cf5d67debad1933f55023df"
 [[package]]
 name = "hexx"
 version = "0.6.0"
+source = "git+https://github.com/killercup/hexx?branch=bevy_reflect#50b874f483f9cb32083ed653b80e6a79ac3c3dfb"
 dependencies = [
  "bevy_reflect",
  "glam 0.23.0",
