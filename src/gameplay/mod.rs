@@ -114,13 +114,14 @@ fn place_kitten(
 #[instrument(level = "debug", skip_all)]
 fn boop_plan(
     map: Res<Map>,
-    cells_with_cats: Query<(Entity, &Cat), With<GridCell>>,
+    cells_with_cats: Query<(Entity, &Cat, &PlayerId), With<GridCell>>,
     mut new_cats: EventReader<NewCat>,
     mut boops: EventWriter<MoveCat>,
 ) {
     for NewCat {
         cat: new_cat,
         position,
+        player,
         ..
     } in new_cats.iter()
     {
@@ -138,13 +139,14 @@ fn boop_plan(
             .map(|direction| (*position + direction, direction));
         let neighbors_with_cats = neighbors.filter_map(|(cell, direction)| {
             let entity = map.cat_by_hex(cell)?;
-            let components = cells_with_cats.get(entity).ok()?;
-            Some((components, cell, direction))
+            let (entity, cat, player) = cells_with_cats.get(entity).ok()?;
+            Some((entity, cat, player, cell, direction))
         });
-        let boopable_neighbors =
-            neighbors_with_cats.filter(|((.., other_cat), ..)| new_cat.can_boop(**other_cat));
+        let boopable_neighbors = neighbors_with_cats
+            .filter(|(_, other_cat, ..)| new_cat.can_boop(**other_cat))
+            .filter(|(_, _, owner, ..)| player != *owner);
 
-        for ((boopee, _cat), boopee_cell, direction) in boopable_neighbors {
+        for (boopee, _cat, _cat_owner, boopee_cell, direction) in boopable_neighbors {
             let possible_boop_destination = boopee_cell + direction;
 
             match map.cell_by_hex(possible_boop_destination) {
