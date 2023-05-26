@@ -28,24 +28,32 @@ impl Plugin for PlayerPlugin {
     }
 }
 
-#[derive(Debug, Component)]
+#[derive(Debug, Default, Component, Reflect)]
+#[reflect(Component)]
+struct PlayerInfoPanel;
+
+#[derive(Debug, Default, Component, Reflect)]
+#[reflect(Component)]
 struct PlayerInfo(PlayerId);
 
 fn setup(mut commands: Commands, fonts: Res<FontAssets>) {
     let font = fonts.fira_sans.clone();
 
     commands
-        .spawn(NodeBundle {
-            style: Style {
-                size: Size::width(Val::Px(160.)),
-                flex_direction: FlexDirection::Column,
-                align_items: AlignItems::Start,
-                gap: Size::all(Val::Px(10.)),
-                ..Default::default()
+        .spawn((
+            NodeBundle {
+                style: Style {
+                    size: Size::width(Val::Px(160.)),
+                    flex_direction: FlexDirection::Column,
+                    align_items: AlignItems::Start,
+                    gap: Size::all(Val::Px(10.)),
+                    ..default()
+                },
+                background_color: BackgroundColor(Color::WHITE),
+                ..default()
             },
-            background_color: BackgroundColor(Color::WHITE),
-            ..Default::default()
-        })
+            PlayerInfoPanel,
+        ))
         .with_children(|parent| {
             parent.spawn((
                 TextBundle::from_section(
@@ -63,7 +71,7 @@ fn setup(mut commands: Commands, fonts: Res<FontAssets>) {
                 TextBundle::from_section(
                     "",
                     TextStyle {
-                        font,
+                        font: font.clone(),
                         font_size: 16.0,
                         color: Color::BLACK,
                     },

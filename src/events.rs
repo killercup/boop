@@ -14,6 +14,7 @@ impl Plugin for EventsPlugin {
         app.add_event::<NewCat>();
         app.add_event::<MoveCat>();
         app.add_event::<GridCellClicked>();
+        app.add_event::<WinEvent>();
     }
 }
 
@@ -51,3 +52,8 @@ pub struct SwitchPlayerEvent;
 
 #[derive(Debug)]
 pub struct NextPlayer;
+
+#[derive(Debug)]
+pub struct WinEvent {
+    pub player: PlayerId,
+}
