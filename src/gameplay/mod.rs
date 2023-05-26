@@ -1,11 +1,15 @@
-use bevy::prelude::{shape::Cube, *};
+use bevy::{
+    prelude::{shape::Cube, *},
+    utils::HashMap,
+};
+use hexx::Hex;
 use tracing::instrument;
 
 use crate::{
     cats::{Cat, Meowple},
     events::{GridCellClicked, MoveCat, NewCat, NextPlayer, ResetGameEvent},
-    grid::Map,
-    players::Players,
+    grid::{GridCell, Map},
+    players::{PlayerId, Players},
     GameState,
 };
 
@@ -20,8 +24,14 @@ impl Plugin for GamePlayPlugin {
             (
                 reset_game.run_if(on_event::<ResetGameEvent>()),
                 place_kitten.run_if(on_event::<GridCellClicked>()),
+            )
+                .in_set(OnUpdate(GameState::Playing)),
+        );
+        app.add_systems(
+            (
                 boop::plan.run_if(on_event::<NewCat>()),
                 boop::move_cat.run_if(on_event::<MoveCat>()),
+                win_condition.run_if(resource_changed::<Map>()),
             )
                 .in_set(OnUpdate(GameState::Playing)),
         );
@@ -107,4 +117,43 @@ fn place_kitten(
     });
 
     next_player.send(NextPlayer);
+}
+
+/// A player wins if they have three adult cats in a row.
+fn win_condition(
+    mut next_state: ResMut<NextState<GameState>>,
+    cats: Query<(&Cat, &PlayerId, &GridCell)>,
+) {
+    let cat_cells_by_player = cats
+        .iter()
+        .filter(|(cat, ..)| matches!(**cat, Cat::Kitten))
+        .fold(
+            HashMap::<PlayerId, Vec<Hex>>::new(),
+            |mut map, (_cat, player, cell)| {
+                map.entry(*player).or_default().push(cell.0);
+                map
+            },
+        );
+
+    for (player, cats) in cat_cells_by_player {
+        if cats.len() < 3 {
+            continue;
+        }
+
+        for cat in &cats {
+            let mut count = 0;
+            for direction in hexx::Direction::iter() {
+                let mut hex = *cat;
+                while cats.contains(&hex.neighbor(direction)) {
+                    count += 1;
+                    hex = hex.neighbor(direction);
+                }
+            }
+            if count >= 2 {
+                info!("Player {player} wins!");
+                next_state.set(GameState::GameOver);
+                return;
+            }
+        }
+    }
 }

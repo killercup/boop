@@ -6,7 +6,7 @@ pub use plugin::*;
 
 use crate::cats::Cat;
 
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Reflect, FromReflect, Component)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash, Reflect, FromReflect, Component)]
 #[reflect(Component)]
 pub struct PlayerId(u8);
 

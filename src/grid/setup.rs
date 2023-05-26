@@ -15,6 +15,7 @@ use super::{Grid, GridCell, Map, MapSettings};
 pub fn setup_grid(
     mut commands: Commands,
     settings: Res<MapSettings>,
+    mut map: ResMut<Map>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
@@ -63,10 +64,7 @@ pub fn setup_grid(
         .entity(parent)
         .push_children(&entities.values().copied().collect::<Vec<_>>());
 
-    commands.insert_resource(Map {
-        cells: entities,
-        cats: default(),
-    });
+    map.cells = entities;
 }
 
 fn circle_column(hex_layout: &HexLayout, settings: &MapSettings) -> Mesh {

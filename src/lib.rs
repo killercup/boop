@@ -1,7 +1,6 @@
 #![allow(clippy::type_complexity, clippy::too_many_arguments)]
 
 use bevy::prelude::*;
-use bevy_asset_loader::prelude::*;
 use bevy_mod_picking::prelude::*;
 use bevy_tweening::TweeningPlugin;
 
@@ -13,7 +12,7 @@ mod loading;
 mod players;
 
 #[derive(States, Default, Clone, Eq, PartialEq, Debug, Hash)]
-enum GameState {
+pub enum GameState {
     #[default]
     Loading,
     Playing,
@@ -34,6 +33,7 @@ impl Plugin for GamePlugin {
         app.add_plugin(cats::CatPlugin);
         app.add_plugin(grid::HexGridPlugin);
         app.add_plugin(players::PlayerPlugin);
+
         app.add_plugin(gameplay::GamePlayPlugin);
 
         app.add_startup_system(setup);

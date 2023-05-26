@@ -17,6 +17,7 @@ impl Plugin for HexGridPlugin {
         app.register_type::<Grid>();
 
         app.init_resource::<MapSettings>();
+        app.init_resource::<Map>();
         app.add_system(setup_grid.in_schedule(OnEnter(GameState::Playing)));
     }
 }

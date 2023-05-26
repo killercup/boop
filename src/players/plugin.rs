@@ -15,7 +15,7 @@ impl Plugin for PlayerPlugin {
         app.init_resource::<Players>();
         app.register_type::<Players>();
 
-        app.add_system(setup.in_schedule(OnEnter(GameState::Playing)));
+        app.add_system(setup.in_schedule(OnExit(GameState::Loading)));
 
         app.add_systems(
             (
