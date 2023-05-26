@@ -1,11 +1,13 @@
 use bevy::{prelude::*, utils::HashMap};
 use hexx::Hex;
+use tracing::instrument;
 
 use crate::{
     cats::Cat, events::WinEvent, grid::GridCell, loading::FontAssets, players::PlayerId, GameState,
 };
 
 /// A player wins if they have three adult cats in a row.
+#[instrument(level = "trace", skip_all)]
 pub fn win_condition(
     mut next_state: ResMut<NextState<GameState>>,
     cats: Query<(&Cat, &PlayerId, &GridCell)>,
@@ -44,12 +46,14 @@ pub fn win_condition(
             }
         }
     }
+    trace!("no winner yet");
 }
 
 #[derive(Debug, Default, Component, Reflect)]
 #[reflect(Component)]
 pub struct WinScreen;
 
+#[instrument(level = "debug", skip_all)]
 pub fn win_screen(
     mut commands: Commands,
     fonts: Res<FontAssets>,

@@ -41,7 +41,7 @@ pub struct GridCellClicked {
 }
 
 impl From<ListenedEvent<Click>> for GridCellClicked {
-    #[instrument(level = "debug", skip_all)]
+    #[instrument(name = "grid_click", level = "trace", skip_all)]
     fn from(event: ListenedEvent<Click>) -> Self {
         GridCellClicked { cell: event.target }
     }
