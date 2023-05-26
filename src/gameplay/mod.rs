@@ -1,4 +1,7 @@
+use std::time::Duration;
+
 use bevy::prelude::{shape::Cube, *};
+use bevy_tweening::{lens::TransformPositionLens, Animator, EaseFunction, Tween};
 use hexx::Hex;
 use tracing::instrument;
 
@@ -176,11 +179,11 @@ fn move_cat(
     mut commands: Commands,
     mut map: ResMut<Map>,
     cells: Query<(&Transform,), (With<GridCell>, Without<Meowple>)>,
-    mut cats: Query<(Entity, &GridCell, &mut Transform, &PlayerId), With<Meowple>>,
+    mut cats: Query<(Entity, &GridCell, &Transform, &PlayerId), With<Meowple>>,
 ) {
     for MoveCat { from, to } in moves.iter() {
         debug!(?from, ?to, "Moving cat");
-        let (cat, cat_cell, mut cat_transform, player_id) = match cats.get_mut(*from) {
+        let (cat, cat_cell, cat_transform, player_id) = match cats.get_mut(*from) {
             Ok(x) => x,
             Err(error) => {
                 error!(entity=?from, ?error, "Cell with cat not found");
@@ -203,12 +206,17 @@ fn move_cat(
 
         map.add_cat(to, cat);
 
-        // TODO: Trigger animation here
+        let mut new_cat_position = cell_position.translation;
+        new_cat_position.y += settings.column_height;
 
-        *cat_transform = *cell_position;
-        // cats should sit on top of the cell
-        cat_transform.translation.y += settings.column_height;
-        // make cats bigger!
-        cat_transform.scale = Vec3::splat(2.);
+        let tween = Tween::new(
+            EaseFunction::QuadraticInOut,
+            Duration::from_millis(260),
+            TransformPositionLens {
+                start: cat_transform.translation,
+                end: new_cat_position,
+            },
+        );
+        commands.entity(cat).insert(Animator::new(tween));
     }
 }

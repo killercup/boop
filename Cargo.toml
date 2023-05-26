@@ -8,6 +8,7 @@ authors = ["Pascal Hertleif <killercup@gmail.com>"]
 bevy = "0.10.1"
 bevy_editor_pls = { version = "0.4.0", optional = true }
 bevy_mod_picking = "0.13.0"
+bevy_tweening = "0.7.0"
 hexx = { version = "0.6.0", path = "/Users/pascal/code/ManevilleF/hexx", features = [
     "bevy_010_reflect",
 ] }

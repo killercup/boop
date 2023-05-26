@@ -1,5 +1,6 @@
 use bevy::{log::LogPlugin, prelude::*};
 use bevy_mod_picking::prelude::*;
+use bevy_tweening::TweeningPlugin;
 use tracing_subscriber::fmt::format::FmtSpan;
 
 fn main() {
@@ -12,6 +13,7 @@ fn main() {
             .disable::<LogPlugin>(),
     );
     app.add_plugins(DefaultPickingPlugins);
+    app.add_plugin(TweeningPlugin);
 
     app.insert_resource(AmbientLight {
         brightness: 0.1,
