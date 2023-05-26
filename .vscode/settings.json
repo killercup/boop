@@ -1,8 +1,17 @@
 {
-    "rust-analyzer.cargo.allFeatures": true,
-    "rust-analyzer.checkOnSave.command": "clippy",
     "[rust]": {
         "editor.formatOnSave": true,
         "editor.defaultFormatter": "rust-lang.rust-analyzer"
-    }
+    },
+    "rust-analyzer.cargo.features": [
+        "dev"
+    ],
+    "rust-analyzer.check.command": "clippy",
+    "cSpell.words": [
+        "Boop",
+        "booped",
+        "boopee",
+        "boops",
+        "meowple"
+    ]
 }
