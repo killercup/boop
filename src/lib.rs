@@ -60,8 +60,13 @@ fn setup(mut commands: Commands) {
     });
 }
 
-fn reset_game(keys: Res<Input<KeyCode>>, mut reset_grid: EventWriter<events::ResetGameEvent>) {
+fn reset_game(
+    keys: Res<Input<KeyCode>>,
+    mut reset_game: EventWriter<events::ResetGameEvent>,
+    mut next_state: ResMut<NextState<GameState>>,
+) {
     if keys.just_pressed(KeyCode::R) {
-        reset_grid.send(events::ResetGameEvent);
+        reset_game.send(events::ResetGameEvent);
+        next_state.set(GameState::Playing);
     }
 }

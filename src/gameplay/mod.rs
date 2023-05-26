@@ -25,7 +25,7 @@ impl Plugin for GamePlayPlugin {
                     .before(win::win_condition),
                 boop::plan.run_if(on_event::<NewCat>()),
                 boop::move_cat.run_if(on_event::<MoveCat>()),
-                win::win_condition,
+                win::win_condition.after(reset_game),
             )
                 .chain()
                 .in_set(OnUpdate(GameState::Playing)),
