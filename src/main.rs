@@ -47,23 +47,23 @@ fn install_tracing(verbose: bool) {
     let default = if verbose { "boop=debug" } else { "boop=info" }
         .parse()
         .unwrap();
-    let mut filter_layer = EnvFilter::builder()
-        .with_default_directive(default)
-        .with_env_var("RUST_LOG")
-        .from_env_lossy();
-    if !env::var("RUST_LOG").map(|x| !x.is_empty()).unwrap_or(false) {
-        filter_layer =
-            filter_layer.add_directive(if verbose { "info" } else { "warn" }.parse().unwrap());
-    }
+
+    let filter_layer = if !env::var("RUST_LOG").map(|x| !x.is_empty()).unwrap_or(false) {
+        EnvFilter::new("warn,wgpu_code=error")
+    } else {
+        EnvFilter::builder()
+            .with_env_var("RUST_LOG")
+            .from_env_lossy()
+    };
 
     tracing_subscriber::registry()
-        .with(filter_layer)
+        .with(filter_layer.add_directive(default))
         .with(fmt_layer)
         .init();
 }
 
 fn setup(mut commands: Commands) {
-    let transform = Transform::from_xyz(0.0, 60.0, 60.0).looking_at(Vec3::ZERO, Vec3::Y);
+    let transform = Transform::from_xyz(0.0, 30.0, 60.0).looking_at(Vec3::ZERO, Vec3::Y);
     commands.spawn((
         Camera3dBundle {
             transform,
