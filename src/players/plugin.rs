@@ -1,6 +1,10 @@
 use bevy::prelude::*;
 
-use crate::events::{NextPlayer, ResetGameEvent};
+use crate::{
+    events::{NextPlayer, ResetGameEvent},
+    loading::FontAssets,
+    GameState,
+};
 
 use super::{Player, PlayerId, Players};
 
@@ -11,18 +15,24 @@ impl Plugin for PlayerPlugin {
         app.init_resource::<Players>();
         app.register_type::<Players>();
 
-        app.add_startup_system(setup);
-        app.add_system(show_players.run_if(resource_changed::<Players>()));
-        app.add_system(reset_players.run_if(on_event::<ResetGameEvent>()));
-        app.add_system(next_player.run_if(on_event::<NextPlayer>()));
+        app.add_system(setup.in_schedule(OnEnter(GameState::Playing)));
+
+        app.add_systems(
+            (
+                show_players.run_if(resource_changed::<Players>()),
+                reset_players.run_if(on_event::<ResetGameEvent>()),
+                next_player.run_if(on_event::<NextPlayer>()),
+            )
+                .in_set(OnUpdate(GameState::Playing)),
+        );
     }
 }
 
 #[derive(Debug, Component)]
 struct PlayerInfo(PlayerId);
 
-fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
-    let font = asset_server.load("fonts/FiraSans-Bold.ttf");
+fn setup(mut commands: Commands, fonts: Res<FontAssets>) {
+    let font = fonts.fira_sans.clone();
 
     commands
         .spawn(NodeBundle {

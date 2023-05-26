@@ -7,7 +7,9 @@ use tracing::instrument;
 use crate::{
     events::NewCat,
     grid::{GridCell, Map, MapSettings},
+    loading::CatModel,
     players::PlayerId,
+    GameState,
 };
 
 #[derive(Debug, Clone, Copy, Default, Component, Reflect)]
@@ -35,30 +37,26 @@ impl Plugin for CatPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<Cat>();
 
-        app.add_startup_system(load_gltf);
-        app.add_system(spawn_cats.run_if(on_event::<NewCat>()));
+        app.add_startup_system(setup);
+        app.add_system(
+            spawn_cats
+                .in_set(OnUpdate(GameState::Playing))
+                .run_if(on_event::<NewCat>()),
+        );
     }
 }
 
-/// Helper resource for tracking our asset
 #[derive(Debug, Default, Resource, Reflect)]
 #[reflect(Resource)]
 struct CatAssets {
-    mesh: Handle<Gltf>,
     /// Material for kittens for the different players
     kitten_material: [Handle<StandardMaterial>; 2],
     /// Material for adult cats for the different players
     adult_material: [Handle<StandardMaterial>; 2],
 }
 
-fn load_gltf(
-    mut commands: Commands,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-    assets: Res<AssetServer>,
-) {
-    let gltf = assets.load("models/cats.glb");
+fn setup(mut commands: Commands, mut materials: ResMut<Assets<StandardMaterial>>) {
     commands.insert_resource(CatAssets {
-        mesh: gltf,
         kitten_material: [
             materials.add(StandardMaterial {
                 base_color: Color::LIME_GREEN,
@@ -86,6 +84,7 @@ fn load_gltf(
 fn spawn_cats(
     settings: Res<MapSettings>,
     cat_assets: Res<CatAssets>,
+    cat_model: Res<CatModel>,
     assets_gltf: Res<Assets<Gltf>>,
     assets_gltfmesh: Res<Assets<GltfMesh>>,
     mut new_cats: EventReader<NewCat>,
@@ -93,10 +92,9 @@ fn spawn_cats(
     mut map: ResMut<Map>,
     cells: Query<(&GridCell, &Transform)>,
 ) {
-    // GLTF has not loaded? very bad
-    let Some(gltf) = assets_gltf.get(&cat_assets.mesh) else {
-        panic!("cat meshes not done loading!");
-    };
+    let gltf = assets_gltf
+        .get(&cat_model.mesh)
+        .expect("cat meshes not done loading!");
 
     for NewCat {
         cat,

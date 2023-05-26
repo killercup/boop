@@ -1,6 +1,10 @@
 use bevy::{prelude::*, utils::HashMap};
 use hexx::Hex;
 
+use crate::GameState;
+
+use self::setup::setup_grid;
+
 mod setup;
 
 pub struct HexGridPlugin;
@@ -13,7 +17,7 @@ impl Plugin for HexGridPlugin {
         app.register_type::<Grid>();
 
         app.init_resource::<MapSettings>();
-        app.add_startup_system(setup::setup_grid);
+        app.add_system(setup_grid.in_schedule(OnEnter(GameState::Playing)));
     }
 }
 

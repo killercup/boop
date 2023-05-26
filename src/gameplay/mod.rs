@@ -10,17 +10,23 @@ use crate::{
     events::{GridCellClicked, MoveCat, NewCat, NextPlayer, ResetGameEvent},
     grid::{GridCell, Map, MapSettings},
     players::{PlayerId, Players},
+    GameState,
 };
 
 pub struct GamePlayPlugin;
 
 impl Plugin for GamePlayPlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(setup);
-        app.add_system(reset_game.run_if(on_event::<ResetGameEvent>()));
-        app.add_system(place_kitten.run_if(on_event::<GridCellClicked>()));
-        app.add_system(boop_plan.run_if(on_event::<NewCat>()));
-        app.add_system(move_cat.run_if(on_event::<MoveCat>()));
+        app.add_system(setup.in_schedule(OnEnter(GameState::Playing)));
+        app.add_systems(
+            (
+                reset_game.run_if(on_event::<ResetGameEvent>()),
+                place_kitten.run_if(on_event::<GridCellClicked>()),
+                boop_plan.run_if(on_event::<NewCat>()),
+                move_cat.run_if(on_event::<MoveCat>()),
+            )
+                .in_set(OnUpdate(GameState::Playing)),
+        );
     }
 }
 

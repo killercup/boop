@@ -1,9 +1,9 @@
-use bevy::{log::LogPlugin, prelude::*};
-use bevy_mod_picking::prelude::*;
-use bevy_tweening::TweeningPlugin;
+use bevy::{
+    diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
+    log::LogPlugin,
+    prelude::*,
+};
 use tracing_subscriber::fmt::format::FmtSpan;
-
-use boop::events;
 
 fn main() {
     install_tracing(cfg!(debug_assertions));
@@ -11,28 +11,27 @@ fn main() {
     let mut app = App::new();
     app.add_plugins(
         DefaultPlugins
-            .set(low_latency_window_plugin())
+            .set(bevy_mod_picking::low_latency_window_plugin())
+            .set(WindowPlugin {
+                primary_window: Some(Window {
+                    title: "B⬡⬡P".to_string(), // ToDo
+                    resolution: (800., 600.).into(),
+                    canvas: Some("#bevy".to_owned()),
+                    ..default()
+                }),
+                ..default()
+            })
             .disable::<LogPlugin>(),
     );
-    app.add_plugins(DefaultPickingPlugins);
-    app.add_plugin(TweeningPlugin);
-
-    app.insert_resource(AmbientLight {
-        brightness: 0.1,
-        ..default()
-    });
-
-    app.add_plugin(boop::events::EventsPlugin);
-    app.add_plugin(boop::cats::CatPlugin);
-    app.add_plugin(boop::grid::HexGridPlugin);
-    app.add_plugin(boop::players::PlayerPlugin);
-    app.add_plugin(boop::gameplay::GamePlayPlugin);
 
     #[cfg(feature = "dev")]
-    app.add_plugin(bevy_editor_pls::EditorPlugin::default());
+    {
+        app.add_plugin(bevy_editor_pls::EditorPlugin::default());
+        app.add_plugin(FrameTimeDiagnosticsPlugin::default());
+        app.add_plugin(LogDiagnosticsPlugin::default());
+    }
 
-    app.add_startup_system(setup);
-    app.add_system(reset_game);
+    app.add_plugin(boop::GamePlugin);
 
     app.run();
 }
@@ -60,25 +59,4 @@ fn install_tracing(verbose: bool) {
         .with(filter_layer.add_directive(default))
         .with(fmt_layer)
         .init();
-}
-
-fn setup(mut commands: Commands) {
-    let transform = Transform::from_xyz(0.0, 30.0, 60.0).looking_at(Vec3::ZERO, Vec3::Y);
-    commands.spawn((
-        Camera3dBundle {
-            transform,
-            ..default()
-        },
-        RaycastPickCamera::default(),
-    ));
-    commands.spawn(DirectionalLightBundle {
-        transform,
-        ..default()
-    });
-}
-
-fn reset_game(keys: Res<Input<KeyCode>>, mut reset_grid: EventWriter<events::ResetGameEvent>) {
-    if keys.just_pressed(KeyCode::R) {
-        reset_grid.send(events::ResetGameEvent);
-    }
 }
