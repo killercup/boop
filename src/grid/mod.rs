@@ -10,6 +10,8 @@ impl Plugin for HexGridPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<Map>();
         app.register_type::<MapSettings>();
+        app.register_type::<GridCell>();
+        app.register_type::<Grid>();
 
         app.add_event::<events::GridCellClicked>();
 
@@ -43,7 +45,7 @@ pub struct Grid;
 
 #[derive(Debug, Clone, Copy, Default, Component, Reflect)]
 #[reflect(Component)]
-pub struct GridCell;
+pub struct GridCell(Hex);
 
 #[derive(Debug, Default, Resource)]
 pub struct MapMaterials {

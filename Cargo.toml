@@ -12,6 +12,7 @@ hexx = { version = "0.6.0", path = "/Users/pascal/code/ManevilleF/hexx", feature
     "bevy_010_reflect",
 ] }
 tracing = "0.1.37"
+tracing-subscriber = "0.3.17"
 
 [features]
 dev = ["bevy_editor_pls"]

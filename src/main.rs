@@ -1,9 +1,16 @@
-use bevy::prelude::*;
+use bevy::{log::LogPlugin, prelude::*};
 use bevy_mod_picking::prelude::*;
+use tracing_subscriber::fmt::format::FmtSpan;
 
 fn main() {
+    install_tracing(cfg!(debug_assertions));
+
     let mut app = App::new();
-    app.add_plugins(DefaultPlugins.set(low_latency_window_plugin()));
+    app.add_plugins(
+        DefaultPlugins
+            .set(low_latency_window_plugin())
+            .disable::<LogPlugin>(),
+    );
     app.add_plugins(DefaultPickingPlugins);
 
     app.insert_resource(AmbientLight {
@@ -12,6 +19,7 @@ fn main() {
     });
     app.add_startup_system(setup);
 
+    app.add_plugin(boop::cats::CatPlugin);
     app.add_plugin(boop::grid::HexGridPlugin);
     app.add_plugin(boop::player::PlayerPlugin);
     app.add_plugin(boop::gameplay::GamePlayPlugin);
@@ -22,6 +30,31 @@ fn main() {
     app.add_system(reset_game);
 
     app.run();
+}
+
+fn install_tracing(verbose: bool) {
+    use std::{env, io};
+    use tracing_subscriber::{fmt, prelude::*, EnvFilter};
+
+    let fmt_layer = fmt::layer()
+        .with_span_events(FmtSpan::NEW | FmtSpan::CLOSE)
+        .with_writer(io::stderr);
+    let default = if verbose { "boop=debug" } else { "boop=info" }
+        .parse()
+        .unwrap();
+    let mut filter_layer = EnvFilter::builder()
+        .with_default_directive(default)
+        .with_env_var("RUST_LOG")
+        .from_env_lossy();
+    if !env::var("RUST_LOG").map(|x| !x.is_empty()).unwrap_or(false) {
+        filter_layer =
+            filter_layer.add_directive(if verbose { "info" } else { "warn" }.parse().unwrap());
+    }
+
+    tracing_subscriber::registry()
+        .with(filter_layer)
+        .with(fmt_layer)
+        .init();
 }
 
 fn setup(mut commands: Commands) {

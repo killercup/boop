@@ -53,8 +53,8 @@ pub fn setup_grid(
                     PickableBundle::default(),
                     RaycastPickTarget::default(),
                     OnPointer::<Click>::send_event::<GridCellClicked>(),
-                    Name::from(format!("{:?}", hex)),
-                    GridCell,
+                    // Name::from(format!("{:?}", hex)),
+                    GridCell(hex),
                 ))
                 .id();
             (hex, id)
