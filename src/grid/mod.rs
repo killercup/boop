@@ -93,7 +93,7 @@ impl Default for MapSettings {
         Self {
             cell_size: Vec2::splat(3.0),
             column_height: 1.0,
-            map_radius: 4,
+            map_radius: 3,
         }
     }
 }
