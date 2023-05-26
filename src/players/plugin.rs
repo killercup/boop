@@ -16,11 +16,11 @@ impl Plugin for PlayerPlugin {
         app.register_type::<Players>();
 
         app.add_system(setup.in_schedule(OnExit(GameState::Loading)));
+        app.add_system(reset_players.run_if(on_event::<ResetGameEvent>()));
 
         app.add_systems(
             (
                 show_players.run_if(resource_changed::<Players>()),
-                reset_players.run_if(on_event::<ResetGameEvent>()),
                 next_player.run_if(on_event::<NextPlayer>()),
             )
                 .in_set(OnUpdate(GameState::Playing)),

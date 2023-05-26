@@ -17,11 +17,9 @@ pub struct GamePlayPlugin;
 impl Plugin for GamePlayPlugin {
     fn build(&self, app: &mut App) {
         app.add_system(setup.in_schedule(OnEnter(GameState::Playing)));
+        app.add_system(reset_game.run_if(on_event::<ResetGameEvent>()));
         app.add_systems(
-            (
-                reset_game.run_if(on_event::<ResetGameEvent>()),
-                place_kitten.run_if(on_event::<GridCellClicked>()),
-            )
+            (place_kitten.run_if(on_event::<GridCellClicked>()),)
                 .in_set(OnUpdate(GameState::Playing)),
         );
         app.add_systems(
