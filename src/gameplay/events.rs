@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use hexx::Hex;
 
 use crate::cats::Cat;
 
@@ -9,6 +10,7 @@ pub struct ResetGameEvent;
 pub struct NewCat {
     pub cat: Cat,
     pub cell: Entity,
+    pub position: Hex,
 }
 
 #[derive(Debug)]

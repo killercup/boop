@@ -47,6 +47,14 @@ pub struct Grid;
 #[reflect(Component)]
 pub struct GridCell(Hex);
 
+impl std::ops::Deref for GridCell {
+    type Target = Hex;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
 #[derive(Debug, Default, Resource)]
 pub struct MapMaterials {
     highlighted_material: Handle<StandardMaterial>,
@@ -56,18 +64,18 @@ pub struct MapMaterials {
 #[derive(Debug, Resource, Reflect)]
 #[reflect(Resource)]
 pub struct MapSettings {
-    /// World size of the hexagons (outer radius)
-    hex_size: Vec2,
-    /// World space height of hex columns
-    column_height: f32,
+    /// World size of the cells (outer radius)
+    pub cell_size: Vec2,
+    /// World space height of grid cells
+    pub column_height: f32,
     /// Map radius
-    map_radius: u32,
+    pub map_radius: u32,
 }
 
 impl Default for MapSettings {
     fn default() -> Self {
         Self {
-            hex_size: Vec2::splat(3.0),
+            cell_size: Vec2::splat(3.0),
             column_height: 1.0,
             map_radius: 4,
         }

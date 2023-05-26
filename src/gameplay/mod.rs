@@ -3,7 +3,7 @@ use hexx::Hex;
 use tracing::instrument;
 
 use crate::{
-    cats::Cat,
+    cats::{Cat, Meowple},
     grid::{events::GridCellClicked, GridCell, Map},
     players::{events::NextPlayer, Players},
 };
@@ -35,12 +35,6 @@ struct KittenMaterials {
     material_player1: Handle<StandardMaterial>,
     material_player2: Handle<StandardMaterial>,
 }
-
-/// Cat figurine
-#[derive(Debug, Clone, Copy, Default, Component, Reflect)]
-#[reflect(Component)]
-pub struct Meowple;
-
 fn setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -79,47 +73,30 @@ fn reset_game(
 #[instrument(level = "debug", skip_all)]
 fn place_kitten(
     mut places: EventReader<GridCellClicked>,
-    mut commands: Commands,
     mut players: ResMut<Players>,
     mut new_cat: EventWriter<NewCat>,
     mut next_player: EventWriter<NextPlayer>,
-    cells_without_cats: Query<(Entity,), (With<GridCell>, Without<Cat>)>,
-    kitten: Res<KittenMaterials>,
+    cells_without_cats: Query<(&GridCell,), Without<Cat>>,
 ) {
     if places.len() > 1 {
         error!("More than one place clicked, ignoring all but first");
     }
     let ev = places.iter().next().unwrap();
 
-    if !cells_without_cats.contains(ev.cell) {
-        warn!("Cell already has a cat, ignoring");
-        return;
-    }
-
     let Some(new_kitten) = players.take_kitten() else {
         warn!("No more kittens to place");
         return;
     };
 
-    commands
-        .entity(ev.cell)
-        .insert(new_kitten)
-        .with_children(|parent| {
-            parent.spawn((
-                PbrBundle {
-                    mesh: kitten.mesh.clone(),
-                    material: kitten.material_player1.clone(),
-                    transform: Transform::from_xyz(0.0, 0.5, 0.0),
-                    ..default()
-                },
-                Name::from("Kitten"),
-                Meowple,
-            ));
-        });
+    let Ok((grid_cell,)) = cells_without_cats.get(ev.cell) else {
+        warn!(cell=?ev.cell, "Cell already has a cat, ignoring");
+        return;
+    };
 
     new_cat.send(NewCat {
         cat: new_kitten,
         cell: ev.cell,
+        position: **grid_cell,
     });
 
     next_player.send(NextPlayer);
@@ -132,12 +109,12 @@ fn boop_plan(
     mut new_cats: EventReader<NewCat>,
     mut boops: EventWriter<MoveCat>,
 ) {
-    for NewCat { cat: new_cat, cell } in new_cats.iter() {
-        let Some(cell) = map.cell_by_entity(*cell) else {
-            error!(entity=?cell, "Cell not found");
-            return;
-        };
-
+    for NewCat {
+        cat: new_cat,
+        cell,
+        position,
+    } in new_cats.iter()
+    {
         // find all neighbors
         // filter out those that are not on the map
         // filter out those that do not have a cat
@@ -149,7 +126,7 @@ fn boop_plan(
 
         let neighbors = Hex::NEIGHBORS_COORDS
             .into_iter()
-            .map(|direction| (cell + direction, direction));
+            .map(|direction| (*position + direction, direction));
         let neighbors_with_cats = neighbors.filter_map(|(cell, direction)| {
             let entity = map.cell_by_hex(cell)?;
             let components = cells_with_cats.get(entity).ok()?;

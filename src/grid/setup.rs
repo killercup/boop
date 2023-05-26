@@ -18,7 +18,7 @@ pub fn setup_grid(
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     let MapSettings {
-        hex_size,
+        cell_size: hex_size,
         map_radius,
         ..
     } = *settings;

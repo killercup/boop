@@ -19,7 +19,6 @@ fn main() {
     });
     app.add_startup_system(setup);
 
-    app.add_plugin(cat_meshes::CatAssetPlugin);
     app.add_plugin(boop::cats::CatPlugin);
     app.add_plugin(boop::grid::HexGridPlugin);
     app.add_plugin(boop::players::PlayerPlugin);
@@ -28,7 +27,7 @@ fn main() {
     #[cfg(feature = "dev")]
     app.add_plugin(bevy_editor_pls::EditorPlugin::default());
 
-    // app.add_system(reset_game);
+    app.add_system(reset_game);
 
     app.run();
 }
