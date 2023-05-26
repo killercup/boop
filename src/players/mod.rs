@@ -57,13 +57,6 @@ impl Players {
         &self.players[self.current_player]
     }
 
-    pub fn from_id(&self, id: PlayerId) -> &Player {
-        self.players
-            .iter()
-            .find(|p| p.id == id)
-            .expect("valid player id")
-    }
-
     pub fn take_kitten(&mut self) -> Option<Cat> {
         let mut player = &mut self.players[self.current_player];
         if player.inventory.kittens > 0 {

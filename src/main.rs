@@ -1,8 +1,4 @@
-use bevy::{
-    diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
-    log::LogPlugin,
-    prelude::*,
-};
+use bevy::{log::LogPlugin, prelude::*};
 use tracing_subscriber::fmt::format::FmtSpan;
 
 fn main() {
@@ -27,8 +23,8 @@ fn main() {
     #[cfg(feature = "dev")]
     {
         app.add_plugin(bevy_editor_pls::EditorPlugin::default());
-        app.add_plugin(FrameTimeDiagnosticsPlugin::default());
-        app.add_plugin(LogDiagnosticsPlugin::default());
+        app.add_plugin(bevy::diagnostic::FrameTimeDiagnosticsPlugin::default());
+        app.add_plugin(bevy::diagnostic::LogDiagnosticsPlugin::default());
     }
 
     app.add_plugin(boop::GamePlugin);
