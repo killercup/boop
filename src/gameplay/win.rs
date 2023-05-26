@@ -26,23 +26,31 @@ pub fn win_condition(
 
     for (player, cats) in cat_cells_by_player {
         if cats.len() < 3 {
+            trace!(?player, cats = cats.len(), "not enough cats");
             continue;
         }
 
         for cat in &cats {
-            let mut count = 0;
             for direction in hexx::Direction::iter() {
-                let mut hex = *cat;
-                while cats.contains(&hex.neighbor(direction)) {
+                let mut count = 1;
+                let mut hex = cat.neighbor(direction);
+                while cats.contains(&hex) {
                     count += 1;
                     hex = hex.neighbor(direction);
                 }
-            }
-            if count >= 2 {
-                info!("Player {player} wins!");
-                wins.send(WinEvent { player });
-                next_state.set(GameState::GameOver);
-                return;
+                if count > 2 {
+                    info!("Player {player} wins!");
+                    wins.send(WinEvent { player });
+                    next_state.set(GameState::GameOver);
+                    return;
+                }
+                trace!(
+                    ?player,
+                    ?cat,
+                    ?direction,
+                    count,
+                    "not enough cats in this row"
+                );
             }
         }
     }
@@ -82,6 +90,14 @@ pub fn win_screen(
                     font: fonts.fira_sans.clone(),
                     font_size: 48.0,
                     color: Color::BLACK,
+                },
+            ),));
+            parent.spawn((TextBundle::from_section(
+                "Press R to restart",
+                TextStyle {
+                    font: fonts.fira_sans.clone(),
+                    font_size: 18.0,
+                    color: Color::DARK_GRAY,
                 },
             ),));
         });

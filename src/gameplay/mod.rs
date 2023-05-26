@@ -16,18 +16,18 @@ pub struct GamePlayPlugin;
 
 impl Plugin for GamePlayPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(setup.in_schedule(OnEnter(GameState::Playing)));
+        app.add_system(setup.in_schedule(OnExit(GameState::Loading)));
         app.add_system(reset_game.run_if(on_event::<ResetGameEvent>()));
         app.add_systems(
-            (place_kitten.run_if(on_event::<GridCellClicked>()),)
-                .in_set(OnUpdate(GameState::Playing)),
-        );
-        app.add_systems(
             (
+                place_kitten
+                    .run_if(on_event::<GridCellClicked>())
+                    .before(win::win_condition),
                 boop::plan.run_if(on_event::<NewCat>()),
                 boop::move_cat.run_if(on_event::<MoveCat>()),
-                win::win_condition.run_if(resource_changed::<Map>()),
+                win::win_condition,
             )
+                .chain()
                 .in_set(OnUpdate(GameState::Playing)),
         );
 
