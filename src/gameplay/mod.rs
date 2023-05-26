@@ -5,7 +5,7 @@ use tracing::instrument;
 use crate::{
     cats::Cat,
     grid::{events::GridCellClicked, GridCell, Map},
-    player::{CurrentPlayer, Player},
+    players::{events::NextPlayer, Players},
 };
 
 use self::events::{MoveCat, NewCat, ResetGameEvent};
@@ -32,7 +32,8 @@ impl Plugin for GamePlayPlugin {
 #[reflect(Resource)]
 struct KittenMaterials {
     mesh: Handle<Mesh>,
-    material: Handle<StandardMaterial>,
+    material_player1: Handle<StandardMaterial>,
+    material_player2: Handle<StandardMaterial>,
 }
 
 /// Cat figurine
@@ -46,12 +47,18 @@ fn setup(
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     let mesh = meshes.add(Cube::default().into());
-    let material = materials.add(StandardMaterial {
-        base_color: Color::GREEN,
-        ..default()
-    });
 
-    commands.insert_resource(KittenMaterials { mesh, material });
+    commands.insert_resource(KittenMaterials {
+        mesh,
+        material_player1: materials.add(StandardMaterial {
+            base_color: Color::GREEN,
+            ..default()
+        }),
+        material_player2: materials.add(StandardMaterial {
+            base_color: Color::RED,
+            ..default()
+        }),
+    });
 }
 
 #[instrument(level = "info", skip_all)]
@@ -73,19 +80,12 @@ fn reset_game(
 fn place_kitten(
     mut places: EventReader<GridCellClicked>,
     mut commands: Commands,
-    mut players: Query<(&mut Player,)>,
-    current_player: Res<CurrentPlayer>,
+    mut players: ResMut<Players>,
     mut new_cat: EventWriter<NewCat>,
-    // map: Res<Map>,
-    // cells_with_cats: Query<(Entity, &Cat), With<GridCell>>,
+    mut next_player: EventWriter<NextPlayer>,
     cells_without_cats: Query<(Entity,), (With<GridCell>, Without<Cat>)>,
     kitten: Res<KittenMaterials>,
 ) {
-    let Ok((mut player,)) = players.get_mut(current_player.id) else{
-        error!("Current player not found");
-        return;
-    };
-
     if places.len() > 1 {
         error!("More than one place clicked, ignoring all but first");
     }
@@ -96,7 +96,7 @@ fn place_kitten(
         return;
     }
 
-    let Some(new_kitten) = player.take_kitten() else {
+    let Some(new_kitten) = players.take_kitten() else {
         warn!("No more kittens to place");
         return;
     };
@@ -108,7 +108,7 @@ fn place_kitten(
             parent.spawn((
                 PbrBundle {
                     mesh: kitten.mesh.clone(),
-                    material: kitten.material.clone(),
+                    material: kitten.material_player1.clone(),
                     transform: Transform::from_xyz(0.0, 0.5, 0.0),
                     ..default()
                 },
@@ -121,6 +121,8 @@ fn place_kitten(
         cat: new_kitten,
         cell: ev.cell,
     });
+
+    next_player.send(NextPlayer);
 }
 
 #[instrument(level = "debug", skip_all)]
@@ -136,33 +138,42 @@ fn boop_plan(
             return;
         };
 
-        let boopees = cell.all_neighbors();
-        let boopees = boopees
-            .iter()
-            .zip(Hex::NEIGHBORS_COORDS)
-            .filter_map(|(&cell, direction)| {
-                let entity = map.cell_by_hex(cell)?;
-                let components = cells_with_cats.get(entity).ok()?;
-                Some((components, direction))
-            })
-            .filter(|((.., other_cat), _direction)| new_cat.can_boop(**other_cat));
+        // find all neighbors
+        // filter out those that are not on the map
+        // filter out those that do not have a cat
+        // filter out those that are not boopable
+        // for each of those, find the cell in the direction of the boop
+        // if that cell is not on the map, cat disappears
+        // else if that cell has a cat, ignore
+        // else move cat to that cell
 
-        for ((boopee, cat), direction) in boopees {
-            let Some(boopee_cell) = map.cell_by_entity(boopee) else {
-                debug!(?boopee, "Cannot find cell for entity");
-                continue;
-            };
-            let destination = boopee_cell + direction;
-            let Some(dest_cell) = map.cell_by_hex(destination) else {
-                debug!(?destination, "Cannot boop outside map");
+        let neighbors = Hex::NEIGHBORS_COORDS
+            .into_iter()
+            .map(|direction| (cell + direction, direction));
+        let neighbors_with_cats = neighbors.filter_map(|(cell, direction)| {
+            let entity = map.cell_by_hex(cell)?;
+            let components = cells_with_cats.get(entity).ok()?;
+            Some((components, cell, direction))
+        });
+        let boopable_neighbors =
+            neighbors_with_cats.filter(|((.., other_cat), ..)| new_cat.can_boop(**other_cat));
+
+        for ((boopee, cat), boopee_cell, direction) in boopable_neighbors {
+            let possible_boop_destination = boopee_cell + direction;
+
+            let Some(dest_cell) = map.cell_by_hex(possible_boop_destination) else {
+                boops.send(MoveCat {
+                    from: boopee,
+                    to: None,
+                });
                 continue;
             };
             if !cells_with_cats.contains(dest_cell) {
-                debug!(?destination, "Cannot boop to cell with cat");
+                debug!(?possible_boop_destination, "Cannot boop to cell with cat");
             }
             boops.send(MoveCat {
                 from: boopee,
-                to: dest_cell,
+                to: Some(dest_cell),
             });
         }
     }
@@ -172,20 +183,29 @@ fn boop_plan(
 fn move_cat(
     mut moves: EventReader<MoveCat>,
     mut commands: Commands,
-    mut source_cells: Query<(&Children,), (With<GridCell>)>,
-    mut target_cells: Query<(Entity,), (With<GridCell>)>,
+    mut source_cells: Query<(Entity, &Children), With<GridCell>>,
+    mut target_cells: Query<(Entity,), With<GridCell>>,
     cats: Query<(Entity, &mut Parent), With<Meowple>>,
 ) {
     for MoveCat { from, to } in moves.iter() {
         debug!(?from, ?to, "Moving cat");
-        let (children,) = match source_cells.get_mut(*from) {
+        let (source_cell, children) = match source_cells.get_mut(*from) {
             Ok(x) => x,
             Err(error) => {
                 error!(entity=?from, ?error, "Cell with cat to not found");
                 continue;
             }
         };
-        let (new_parent,) = match target_cells.get_mut(*to) {
+
+        commands.entity(source_cell).remove::<Cat>();
+
+        let Some(to) = *to else {
+            debug!(?from, ?to, "Bye bye cat");
+            commands.entity(*from).despawn_descendants();
+            return;
+        };
+
+        let (new_parent,) = match target_cells.get_mut(to) {
             Ok(x) => x,
             Err(error) => {
                 error!(entity=?from, ?error, "Cell to move cat to not found, is it empty?");
@@ -195,7 +215,6 @@ fn move_cat(
         for child in children {
             if cats.contains(*child) {
                 commands.entity(*child).set_parent(new_parent);
-                // commands.entity(new_parent).add_child(*child);
             } else {
                 error!(entity=?child, "Child is not a cat");
             }

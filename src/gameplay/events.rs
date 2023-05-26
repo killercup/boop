@@ -14,5 +14,5 @@ pub struct NewCat {
 #[derive(Debug)]
 pub struct MoveCat {
     pub from: Entity,
-    pub to: Entity,
+    pub to: Option<Entity>,
 }

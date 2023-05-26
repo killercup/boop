@@ -8,7 +8,7 @@ pub struct GridCellClicked {
 }
 
 impl From<ListenedEvent<Click>> for GridCellClicked {
-    #[instrument(level = "debug")]
+    #[instrument(level = "debug", skip_all)]
     fn from(event: ListenedEvent<Click>) -> Self {
         GridCellClicked { cell: event.target }
     }

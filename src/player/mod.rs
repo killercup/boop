@@ -7,6 +7,7 @@ pub mod events;
 #[derive(Debug, Clone, Copy, Component, Reflect)]
 #[reflect(Component)]
 pub struct Player {
+    pub id: u8,
     pub kittens: u8,
     pub cats: u8,
 }
@@ -14,6 +15,7 @@ pub struct Player {
 impl Default for Player {
     fn default() -> Self {
         Self {
+            id: 0,
             kittens: 6,
             cats: 0,
         }
@@ -58,8 +60,12 @@ impl Plugin for PlayerPlugin {
 }
 
 fn setup_player(mut commands: Commands) {
-    let red = commands.spawn((Player::default(), Name::from("Red"))).id();
-    let _blue = commands.spawn((Player::default(), Name::from("Blue"))).id();
+    let red = commands
+        .spawn((Player { id: 0, ..default() }, Name::from("Red")))
+        .id();
+    let _blue = commands
+        .spawn((Player { id: 1, ..default() }, Name::from("Blue")))
+        .id();
 
     commands.insert_resource(CurrentPlayer { id: red });
 }

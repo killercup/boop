@@ -19,15 +19,16 @@ fn main() {
     });
     app.add_startup_system(setup);
 
+    app.add_plugin(cat_meshes::CatAssetPlugin);
     app.add_plugin(boop::cats::CatPlugin);
     app.add_plugin(boop::grid::HexGridPlugin);
-    app.add_plugin(boop::player::PlayerPlugin);
+    app.add_plugin(boop::players::PlayerPlugin);
     app.add_plugin(boop::gameplay::GamePlayPlugin);
 
     #[cfg(feature = "dev")]
     app.add_plugin(bevy_editor_pls::EditorPlugin::default());
 
-    app.add_system(reset_game);
+    // app.add_system(reset_game);
 
     app.run();
 }
@@ -57,6 +58,8 @@ fn install_tracing(verbose: bool) {
         .init();
 }
 
+mod cat_meshes;
+
 fn setup(mut commands: Commands) {
     let transform = Transform::from_xyz(0.0, 60.0, 60.0).looking_at(Vec3::ZERO, Vec3::Y);
     commands.spawn((
@@ -75,10 +78,10 @@ fn setup(mut commands: Commands) {
 fn reset_game(
     keys: Res<Input<KeyCode>>,
     mut reset_grid: EventWriter<boop::gameplay::events::ResetGameEvent>,
-    // mut reset_players: EventWriter<boop::ResetPlayers>,
+    mut reset_players: EventWriter<boop::players::events::ResetPlayers>,
 ) {
     if keys.just_pressed(KeyCode::R) {
         reset_grid.send(boop::gameplay::events::ResetGameEvent);
-        // reset_players.send(boop::ResetPlayers);
+        reset_players.send(boop::players::events::ResetPlayers);
     }
 }
