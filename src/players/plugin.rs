@@ -20,6 +20,7 @@ impl Plugin for PlayerPlugin {
 
         app.add_systems(
             (
+                show_players.run_if(resource_added::<Players>()),
                 show_players.run_if(resource_changed::<Players>()),
                 next_player.run_if(on_event::<NextPlayer>()),
             )
@@ -41,55 +42,91 @@ fn setup(mut commands: Commands, fonts: Res<FontAssets>) {
         .spawn((
             NodeBundle {
                 style: Style {
-                    size: Size::width(Val::Px(160.)),
-                    flex_direction: FlexDirection::Column,
+                    size: Size::width(Val::Percent(100.)),
+                    flex_direction: FlexDirection::Row,
                     align_items: AlignItems::Start,
-                    gap: Size::all(Val::Px(10.)),
+                    padding: UiRect::all(Val::Px(30.)),
                     ..default()
                 },
-                background_color: BackgroundColor(Color::WHITE),
                 ..default()
             },
             PlayerInfoPanel,
         ))
-        .with_children(|parent| {
-            parent.spawn((
-                TextBundle::from_section(
-                    "",
-                    TextStyle {
-                        font: fonts.fira_sans.clone(),
-                        font_size: 16.0,
-                        color: Color::BLACK,
+        .with_children(|panel| {
+            panel
+                .spawn((NodeBundle {
+                    style: Style {
+                        size: Size::width(Val::Px(200.)),
+                        flex_direction: FlexDirection::Row,
+                        align_items: AlignItems::Start,
+                        padding: UiRect::all(Val::Px(30.)),
+                        ..default()
                     },
-                ),
-                PlayerInfo(PlayerId::new(0)),
-            ));
+                    background_color: BackgroundColor(Color::LIME_GREEN.with_a(0.5)),
+                    ..default()
+                },))
+                .with_children(|player1| {
+                    player1.spawn((
+                        TextBundle::from_section(
+                            "6 kittens",
+                            TextStyle {
+                                font: fonts.fira_sans.clone(),
+                                font_size: 16.0,
+                                color: Color::BLACK,
+                            },
+                        )
+                        .with_text_alignment(TextAlignment::Left)
+                        .with_style(Style {
+                            size: Size::width(Val::Px(200.)),
+                            ..default()
+                        }),
+                        PlayerInfo(PlayerId::new(0)),
+                    ));
+                });
 
-            parent.spawn((
-                TextBundle::from_section(
-                    "",
-                    TextStyle {
-                        font: fonts.fira_sans.clone(),
-                        font_size: 16.0,
-                        color: Color::BLACK,
+            panel
+                .spawn((NodeBundle {
+                    style: Style {
+                        size: Size::width(Val::Px(200.)),
+                        flex_direction: FlexDirection::Row,
+                        align_items: AlignItems::Start,
+                        padding: UiRect::all(Val::Px(30.)),
+                        ..default()
                     },
-                )
-                .with_text_alignment(TextAlignment::Left),
-                PlayerInfo(PlayerId::new(1)),
-            ));
+                    background_color: BackgroundColor(Color::ORANGE.with_a(0.5)),
+                    ..default()
+                },))
+                .with_children(|player1| {
+                    player1.spawn((
+                        TextBundle::from_section(
+                            "6 kittens",
+                            TextStyle {
+                                font: fonts.fira_sans.clone(),
+                                font_size: 16.0,
+                                color: Color::BLACK,
+                            },
+                        )
+                        .with_text_alignment(TextAlignment::Right)
+                        .with_style(Style {
+                            size: Size::width(Val::Px(200.)),
+                            ..default()
+                        }),
+                        PlayerInfo(PlayerId::new(1)),
+                    ));
+                });
         });
 }
 
 fn show_players(players: Res<Players>, mut info: Query<(&mut Text, &PlayerInfo)>) {
     for (mut text, player) in info.iter_mut() {
         let id = player.0;
-        let Player { id, inventory } = players
+        let Player { inventory, .. } = players
             .players
             .iter()
             .find(|p| p.id == id)
             .expect("valid player id");
         *text = Text::from_section(
-            format!("{id:?}\n{inventory:#?}"),
+            format!("{} kittens", inventory.kittens),
             text.sections[0].style.clone(),
         );
     }

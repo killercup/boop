@@ -22,7 +22,7 @@ impl fmt::Display for PlayerId {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Resource, Reflect)]
+#[derive(Debug, Clone, PartialEq, Resource, Reflect)]
 #[reflect(Resource)]
 pub struct Players {
     players: Vec<Player>,
@@ -35,11 +35,15 @@ impl Default for Players {
             players: vec![
                 Player {
                     id: PlayerId::new(0),
+                    name: "Green".into(),
                     inventory: Inventory::default(),
+                    color: Color::LIME_GREEN,
                 },
                 Player {
                     id: PlayerId::new(1),
+                    name: "Orange".into(),
                     inventory: Inventory::default(),
+                    color: Color::ORANGE,
                 },
             ],
             current_player: 0,
@@ -92,10 +96,12 @@ impl Players {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Reflect, FromReflect)]
+#[derive(Debug, Clone, PartialEq, Reflect, FromReflect)]
 pub struct Player {
     pub id: PlayerId,
+    pub name: String,
     pub inventory: Inventory,
+    pub color: Color,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Reflect, FromReflect)]
