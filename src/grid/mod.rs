@@ -1,9 +1,9 @@
 use bevy::prelude::*;
 use hexx::Hex;
 
-use crate::{events::ResetGameEvent, GameState};
+use crate::{events::ResetGameEvent, players::Players, GameState};
 
-use self::setup::setup_grid;
+use self::setup::{setup_grid, CellMaterials};
 
 mod map;
 mod setup;
@@ -24,6 +24,7 @@ impl Plugin for HexGridPlugin {
 
         app.add_system(setup_grid.in_schedule(OnExit(GameState::Loading)));
         app.add_system(reset_map.run_if(on_event::<ResetGameEvent>()));
+        app.add_system(highlight_cell.in_set(OnUpdate(GameState::Playing)));
     }
 }
 
@@ -45,4 +46,27 @@ impl std::ops::Deref for GridCell {
     fn deref(&self) -> &Self::Target {
         &self.0
     }
+}
+
+#[derive(Debug, Clone, Copy, Default, Component, Reflect)]
+#[reflect(Component)]
+pub struct Hovered;
+
+fn highlight_cell(
+    players: Res<Players>,
+    materials: Res<CellMaterials>,
+    map: Res<Map>,
+    mut hovered_cell: Query<(&mut Handle<StandardMaterial>, &GridCell), With<Hovered>>,
+    mut other_cells: Query<(&mut Handle<StandardMaterial>,), (With<GridCell>, Without<Hovered>)>,
+) {
+    let player_material = materials.hovered_by_player[players.current().id.0 as usize].clone();
+    hovered_cell.iter_mut().for_each(|(mut material, cell)| {
+        if map.cat_by_hex(cell.0).is_none() {
+            *material = player_material.clone();
+        }
+    });
+
+    other_cells.iter_mut().for_each(|(mut material,)| {
+        *material = materials.default.clone();
+    });
 }

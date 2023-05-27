@@ -4,7 +4,7 @@ use tracing::instrument;
 use crate::{
     cats::{Cat, Meowple},
     events::{GridCellClicked, MoveCat, NewCat, NextPlayer, ResetGameEvent, WinEvent},
-    grid::Map,
+    grid::{Hovered, Map},
     players::Players,
     GameState,
 };
@@ -81,6 +81,7 @@ fn reset_game(
 
 #[instrument(level = "debug", skip_all)]
 fn place_kitten(
+    mut commands: Commands,
     map: Res<Map>,
     mut places: EventReader<GridCellClicked>,
     mut players: ResMut<Players>,
@@ -91,6 +92,8 @@ fn place_kitten(
         error!("More than one place clicked, ignoring all but first");
     }
     let ev = places.iter().next().unwrap();
+
+    commands.entity(ev.cell).remove::<Hovered>();
 
     let Some(hex) = map.cell_by_entity(ev.cell) else {
         warn!("Place not on map");

@@ -3,14 +3,21 @@ use bevy::{
     utils::HashMap,
 };
 use bevy_mod_picking::{
-    prelude::{Click, OnPointer, RaycastPickTarget},
+    prelude::{Click, OnPointer, Out, Over, RaycastPickTarget},
     PickableBundle,
 };
 use hexx::{shapes, Hex, HexLayout};
 
 use crate::events::GridCellClicked;
 
-use super::{Grid, GridCell, Map, MapSettings};
+use super::{Grid, GridCell, Hovered, Map, MapSettings};
+
+#[derive(Debug, Resource, Default, Reflect)]
+#[reflect(Resource)]
+pub struct CellMaterials {
+    pub default: Handle<StandardMaterial>,
+    pub hovered_by_player: [Handle<StandardMaterial>; 2],
+}
 
 pub fn setup_grid(
     mut commands: Commands,
@@ -33,6 +40,14 @@ pub fn setup_grid(
     let mesh = circle_column(&layout, &settings);
     let mesh_handle = meshes.add(mesh);
 
+    commands.insert_resource(CellMaterials {
+        default: default_material.clone(),
+        hovered_by_player: [
+            materials.add(Color::LIME_GREEN.into()),
+            materials.add(Color::ORANGE.into()),
+        ],
+    });
+
     let parent = commands
         .spawn((SpatialBundle { ..default() }, Name::from("Grid"), Grid))
         .id();
@@ -51,6 +66,8 @@ pub fn setup_grid(
                     },
                     PickableBundle::default(),
                     RaycastPickTarget::default(),
+                    OnPointer::<Over>::target_insert(Hovered),
+                    OnPointer::<Out>::target_remove::<Hovered>(),
                     OnPointer::<Click>::send_event::<GridCellClicked>(),
                     // Name::from(format!("{:?}", hex)),
                     GridCell(hex),

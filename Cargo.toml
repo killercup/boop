@@ -10,7 +10,9 @@ bevy_asset_loader = "0.16.0"
 bevy_editor_pls = { version = "0.4.0", optional = true }
 bevy_mod_picking = { version = "0.13.0", features = [
     "backend_raycast",
-    "highlight",
+    # "backend_bevy_ui",
+    # "backend_sprite",
+    # "highlight",
 ], default-features = false }
 bevy_tweening = "0.7.0"
 hexx = { version = "0.6.0", git = "https://github.com/killercup/hexx", branch = "bevy_reflect", features = [
