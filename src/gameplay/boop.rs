@@ -46,7 +46,8 @@ pub fn plan(
         });
         let boopable_neighbors = neighbors_with_cats
             .filter(|(_, other_cat, ..)| new_cat.can_boop(**other_cat))
-            .filter(|(_, _, owner, ..)| player != *owner);
+            // .filter(|(_, _, owner, ..)| player != *owner)
+            ;
 
         for (boopee, _cat, _cat_owner, boopee_cell, direction) in boopable_neighbors {
             let possible_boop_destination = boopee_cell + direction;
