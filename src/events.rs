@@ -15,6 +15,7 @@ impl Plugin for EventsPlugin {
         app.add_event::<MoveCat>();
         app.add_event::<GridCellClicked>();
         app.add_event::<WinEvent>();
+        app.add_event::<OutOfTurns>(); // TODO: trigger this and show gmae over screen
     }
 }
 
@@ -57,3 +58,6 @@ pub struct NextPlayer;
 pub struct WinEvent {
     pub player: PlayerId,
 }
+
+#[derive(Debug)]
+pub struct OutOfTurns;
