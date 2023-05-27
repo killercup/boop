@@ -1,6 +1,6 @@
 [package]
 name = "boop"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 authors = ["Pascal Hertleif <killercup@gmail.com>"]
 
@@ -26,3 +26,7 @@ dev = ["bevy_editor_pls"]
 
 [profile.dev.package."*"]
 opt-level = 3
+
+[profile.release]
+lto = "fat"
+codegen-units = 1

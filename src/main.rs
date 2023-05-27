@@ -2,22 +2,27 @@ use bevy::{log::LogPlugin, prelude::*};
 use tracing_subscriber::fmt::format::FmtSpan;
 
 fn main() {
-    // install_tracing(cfg!(debug_assertions));
+    #[cfg(not(target = "wasm32"))]
+    install_tracing(cfg!(debug_assertions));
 
     let mut app = App::new();
-    app.add_plugins(
-        DefaultPlugins
-            .set(bevy_mod_picking::low_latency_window_plugin())
-            .set(WindowPlugin {
-                primary_window: Some(Window {
-                    title: "B⬡⬡P".to_string(), // ToDo
-                    resolution: (800., 600.).into(),
-                    canvas: Some("#bevy".to_owned()),
-                    ..default()
-                }),
+    app.add_plugins({
+        let x = DefaultPlugins;
+        let x = x.set(bevy_mod_picking::low_latency_window_plugin());
+        let x = x.set(WindowPlugin {
+            primary_window: Some(Window {
+                title: "B⬡⬡P".to_string(), // ToDo
+                resolution: (800., 600.).into(),
+                canvas: Some("#bevy".to_owned()),
                 ..default()
-            }), // .disable::<LogPlugin>(),
-    );
+            }),
+            ..default()
+        });
+        #[cfg(not(target = "wasm32"))]
+        let x = x.disable::<LogPlugin>();
+
+        x
+    });
 
     #[cfg(feature = "dev")]
     {
