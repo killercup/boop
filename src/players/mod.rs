@@ -26,7 +26,7 @@ impl fmt::Display for PlayerId {
 #[derive(Debug, Clone, PartialEq, Resource, Reflect)]
 #[reflect(Resource)]
 pub struct Players {
-    players: Vec<Player>,
+    pub players: Vec<Player>,
     current_player: usize,
 }
 
@@ -60,7 +60,7 @@ impl Players {
     #[instrument(level = "debug", skip_all)]
     pub fn next_player(&mut self) -> &Player {
         let next_player = (self.current_player + 1).rem_euclid(self.players.len());
-        if self.players[self.current_player].can_do_turn() {
+        if self.players[next_player].can_do_turn() {
             self.current_player = next_player;
         } else {
             debug!("Next player has no playable slots");
