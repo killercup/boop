@@ -10,7 +10,7 @@ use hexx::{shapes, Hex, HexLayout};
 
 use crate::events::GridCellClicked;
 
-use super::{Grid, GridCell, Hovered, Map, MapSettings};
+use super::{Grid, GridCell, Hovered, Map, MapSettings, Platform};
 
 #[derive(Debug, Resource, Default, Reflect)]
 #[reflect(Resource)]
@@ -71,6 +71,7 @@ pub fn setup_grid(
                     OnPointer::<Click>::send_event::<GridCellClicked>(),
                     // Name::from(format!("{:?}", hex)),
                     GridCell(hex),
+                    Platform,
                 ))
                 .id();
             (hex, id)

@@ -38,6 +38,10 @@ pub struct Grid;
 
 #[derive(Debug, Clone, Copy, Default, Component, Reflect)]
 #[reflect(Component)]
+pub struct Platform;
+
+#[derive(Debug, Clone, Copy, Default, Component, Reflect)]
+#[reflect(Component)]
 pub struct GridCell(pub Hex);
 
 impl std::ops::Deref for GridCell {
@@ -56,8 +60,11 @@ fn highlight_cell(
     players: Res<Players>,
     materials: Res<CellMaterials>,
     map: Res<Map>,
-    mut hovered_cell: Query<(&mut Handle<StandardMaterial>, &GridCell), With<Hovered>>,
-    mut other_cells: Query<(&mut Handle<StandardMaterial>,), (With<GridCell>, Without<Hovered>)>,
+    mut hovered_cell: Query<
+        (&mut Handle<StandardMaterial>, &GridCell),
+        (With<Platform>, With<Hovered>),
+    >,
+    mut other_cells: Query<(&mut Handle<StandardMaterial>,), (With<Platform>, Without<Hovered>)>,
 ) {
     let player_material = materials.hovered_by_player[players.current().id.0 as usize].clone();
     hovered_cell.iter_mut().for_each(|(mut material, cell)| {
