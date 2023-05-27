@@ -1,5 +1,5 @@
 use bevy::{prelude::*, ui::FocusPolicy, utils::HashMap};
-use bevy_mod_picking::prelude::{Click, ListenedEvent, OnPointer, Over};
+use bevy_mod_picking::prelude::*;
 use hexx::Hex;
 use tracing::instrument;
 
@@ -12,13 +12,30 @@ use crate::{
     GameState,
 };
 
+#[instrument(level = "trace", skip_all)]
+pub fn draw_condition(
+    players: Res<Players>,
+    mut next_state: ResMut<NextState<GameState>>,
+    mut reset: EventReader<ResetGameEvent>,
+    mut wins: EventWriter<WinEvent>,
+) {
+    // dedup
+    if reset.iter().count() > 0 {
+        return;
+    }
+    if !players.players.iter().any(|player| player.can_do_turn()) {
+        wins.send(WinEvent { winner: None });
+        next_state.set(GameState::GameOver);
+    }
+}
+
 /// A player wins if they have three adult cats in a row.
 #[instrument(level = "trace", skip_all)]
 pub fn win_condition(
     mut next_state: ResMut<NextState<GameState>>,
-    cats: Query<(&Cat, &PlayerId, &GridCell)>,
-    mut wins: EventWriter<WinEvent>,
     mut reset: EventReader<ResetGameEvent>,
+    mut wins: EventWriter<WinEvent>,
+    cats: Query<(&Cat, &PlayerId, &GridCell)>,
 ) {
     // dedup
     if reset.iter().count() > 0 {
@@ -52,7 +69,9 @@ pub fn win_condition(
                 }
                 if count > 2 {
                     info!("Player {player} wins!");
-                    wins.send(WinEvent { player });
+                    wins.send(WinEvent {
+                        winner: Some(player),
+                    });
                     next_state.set(GameState::GameOver);
                     return;
                 }
@@ -75,12 +94,18 @@ pub struct WinScreen;
 
 #[instrument(level = "debug", skip_all)]
 pub fn win_screen(
-    mut commands: Commands,
     fonts: Res<FontAssets>,
-    mut event: EventReader<WinEvent>,
     players: Res<Players>,
+    mut commands: Commands,
+    mut event: EventReader<WinEvent>,
+    previous_win_screens: Query<(Entity,), With<WinScreen>>,
 ) {
     let event = event.iter().next().unwrap();
+
+    previous_win_screens.iter().for_each(|(entity,)| {
+        commands.entity(entity).despawn_recursive();
+    });
+
     commands
         .spawn((
             NodeBundle {
@@ -89,6 +114,7 @@ pub fn win_screen(
                     align_items: AlignItems::Center,
                     justify_content: JustifyContent::Center,
                     padding: UiRect::all(Val::Px(20.)),
+                    gap: Size::all(Val::Px(10.)),
                     ..default()
                 },
                 background_color: BackgroundColor(Color::WHITE.with_a(0.6)),
@@ -97,15 +123,37 @@ pub fn win_screen(
             WinScreen,
         ))
         .with_children(|parent| {
-            let player = players.by_id(event.player).expect("valid player id");
-            parent.spawn((TextBundle::from_section(
-                format!("{} won!", player.name),
-                TextStyle {
-                    font: fonts.fira_sans.clone(),
-                    font_size: 48.0,
-                    color: Color::BLACK,
-                },
-            ),));
+            match event.winner {
+                Some(id) => {
+                    let player = players.by_id(id).expect("valid player id");
+                    parent.spawn((TextBundle::from_section(
+                        format!("{} won!", player.name),
+                        TextStyle {
+                            font: fonts.fira_sans.clone(),
+                            font_size: 48.0,
+                            color: Color::BLACK,
+                        },
+                    ),));
+                }
+                None => {
+                    parent.spawn((TextBundle::from_section(
+                        "Tie!",
+                        TextStyle {
+                            font: fonts.fira_sans.clone(),
+                            font_size: 48.0,
+                            color: Color::BLACK,
+                        },
+                    ),));
+                    parent.spawn((TextBundle::from_section(
+                        "No more cats!",
+                        TextStyle {
+                            font: fonts.fira_sans.clone(),
+                            font_size: 24.0,
+                            color: Color::BLACK,
+                        },
+                    ),));
+                }
+            };
             parent
                 .spawn((
                     ButtonBundle {

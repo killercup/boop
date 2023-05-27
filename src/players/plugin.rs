@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use tracing::instrument;
 
 use crate::{
     events::{NextPlayer, ResetGameEvent},
@@ -18,14 +19,11 @@ impl Plugin for PlayerPlugin {
         app.add_system(setup.in_schedule(OnExit(GameState::Loading)));
         app.add_system(reset_players.run_if(on_event::<ResetGameEvent>()));
 
-        app.add_systems(
-            (
-                show_players.run_if(resource_exists_and_changed::<Players>()),
-                show_current_player_indicator.run_if(resource_exists_and_changed::<Players>()),
-                next_player.run_if(on_event::<NextPlayer>()),
-            )
-                .in_set(OnUpdate(GameState::Playing)),
-        );
+        app.add_systems((
+            show_players.run_if(resource_exists_and_changed::<Players>()),
+            show_current_player_indicator.run_if(resource_exists_and_changed::<Players>()),
+            next_player.run_if(on_event::<NextPlayer>()),
+        ));
     }
 }
 
@@ -178,6 +176,7 @@ fn reset_players(mut players: ResMut<Players>) {
     *players = Players::default();
 }
 
+#[instrument(level = "info", skip_all)]
 fn next_player(mut players: ResMut<Players>) {
     players.next_player();
 }

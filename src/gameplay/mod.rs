@@ -25,6 +25,7 @@ impl Plugin for GamePlayPlugin {
                 boop::plan.run_if(on_event::<NewCat>()),
                 boop::move_cat.run_if(on_event::<MoveCat>()),
                 win::win_condition.after(reset_game),
+                win::draw_condition.after(reset_game),
             )
                 .chain()
                 .in_set(OnUpdate(GameState::Playing)),
@@ -108,6 +109,7 @@ fn place_kitten(
     let player = players.current().id;
     let Some(new_kitten) = players.take_kitten() else {
         warn!("No more kittens to place");
+        next_player.send(NextPlayer);
         return;
     };
 

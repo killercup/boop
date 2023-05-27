@@ -56,7 +56,7 @@ pub struct NextPlayer;
 
 #[derive(Debug)]
 pub struct WinEvent {
-    pub player: PlayerId,
+    pub winner: Option<PlayerId>,
 }
 
 #[derive(Debug)]
