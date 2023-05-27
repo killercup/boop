@@ -17,7 +17,6 @@ pub struct GamePlayPlugin;
 impl Plugin for GamePlayPlugin {
     fn build(&self, app: &mut App) {
         app.add_system(setup.in_schedule(OnExit(GameState::Loading)));
-        app.add_system(reset_game.run_if(on_event::<ResetGameEvent>()));
         app.add_systems(
             (
                 place_kitten
@@ -33,6 +32,8 @@ impl Plugin for GamePlayPlugin {
 
         app.add_system(win::win_screen.run_if(on_event::<WinEvent>()));
         app.add_system(win::win_screen_cleanup.run_if(on_event::<ResetGameEvent>()));
+
+        app.add_system(reset_game.run_if(on_event::<ResetGameEvent>()));
     }
 }
 

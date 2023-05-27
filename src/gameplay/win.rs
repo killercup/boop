@@ -3,7 +3,12 @@ use hexx::Hex;
 use tracing::instrument;
 
 use crate::{
-    cats::Cat, events::WinEvent, grid::GridCell, loading::FontAssets, players::PlayerId, GameState,
+    cats::Cat,
+    events::{ResetGameEvent, WinEvent},
+    grid::GridCell,
+    loading::FontAssets,
+    players::PlayerId,
+    GameState,
 };
 
 /// A player wins if they have three adult cats in a row.
@@ -12,7 +17,13 @@ pub fn win_condition(
     mut next_state: ResMut<NextState<GameState>>,
     cats: Query<(&Cat, &PlayerId, &GridCell)>,
     mut wins: EventWriter<WinEvent>,
+    mut reset: EventReader<ResetGameEvent>,
 ) {
+    // dedup
+    if reset.iter().count() > 0 {
+        return;
+    }
+
     let cat_cells_by_player = cats
         .iter()
         .filter(|(cat, ..)| matches!(**cat, Cat::Kitten)) // FIXME: real cats
