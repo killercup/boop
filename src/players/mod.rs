@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use std::fmt;
+use tracing::instrument;
 
 mod plugin;
 pub use plugin::*;
@@ -8,7 +9,7 @@ use crate::cats::Cat;
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash, Reflect, FromReflect, Component)]
 #[reflect(Component)]
-pub struct PlayerId(u8);
+pub struct PlayerId(pub u8);
 
 impl PlayerId {
     pub fn new(id: u8) -> PlayerId {
@@ -56,11 +57,22 @@ impl Players {
         &self.players[self.current_player]
     }
 
+    #[instrument(level = "debug", skip_all)]
     pub fn next_player(&mut self) -> &Player {
-        self.current_player = (self.current_player + 1).rem_euclid(self.players.len());
+        let next_player = (self.current_player + 1).rem_euclid(self.players.len());
+        if self.players[self.current_player].can_do_turn() {
+            self.current_player = next_player;
+        } else {
+            debug!("Next player has no playable slots");
+        }
         &self.players[self.current_player]
     }
 
+    pub fn by_id(&self, id: PlayerId) -> Option<&Player> {
+        self.players.iter().find(|p| p.id == id)
+    }
+
+    #[instrument(level = "debug", skip_all)]
     pub fn take_kitten(&mut self) -> Option<Cat> {
         let mut player = &mut self.players[self.current_player];
         if player.inventory.kittens > 0 {
@@ -72,12 +84,14 @@ impl Players {
         }
     }
 
+    #[instrument(level = "debug", skip_all)]
     pub fn gain_kitten(&mut self, player: PlayerId) {
         let mut player = self.players.iter_mut().find(|p| p.id == player).unwrap();
         debug!("More kittens!");
         player.inventory.kittens += 1;
     }
 
+    #[instrument(level = "debug", skip_all)]
     pub fn take_cat(&mut self) -> Option<Cat> {
         let mut player = &mut self.players[self.current_player];
         if player.inventory.cats > 0 {
@@ -89,6 +103,7 @@ impl Players {
         }
     }
 
+    #[instrument(level = "debug", skip_all)]
     pub fn gain_cats(&mut self, num: u8) {
         let mut player = &mut self.players[self.current_player];
         debug!(num, "More cats!");
@@ -102,6 +117,12 @@ pub struct Player {
     pub name: String,
     pub inventory: Inventory,
     pub color: Color,
+}
+
+impl Player {
+    pub fn can_do_turn(&self) -> bool {
+        self.inventory.kittens + self.inventory.cats > 0
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Reflect, FromReflect)]

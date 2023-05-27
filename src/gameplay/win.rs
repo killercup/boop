@@ -1,4 +1,5 @@
-use bevy::{prelude::*, utils::HashMap};
+use bevy::{prelude::*, ui::FocusPolicy, utils::HashMap};
+use bevy_mod_picking::prelude::{Click, ListenedEvent, OnPointer, Over};
 use hexx::Hex;
 use tracing::instrument;
 
@@ -7,7 +8,7 @@ use crate::{
     events::{ResetGameEvent, WinEvent},
     grid::GridCell,
     loading::FontAssets,
-    players::PlayerId,
+    players::{PlayerId, Players},
     GameState,
 };
 
@@ -77,6 +78,7 @@ pub fn win_screen(
     mut commands: Commands,
     fonts: Res<FontAssets>,
     mut event: EventReader<WinEvent>,
+    players: Res<Players>,
 ) {
     let event = event.iter().next().unwrap();
     commands
@@ -86,7 +88,7 @@ pub fn win_screen(
                     flex_direction: FlexDirection::Column,
                     align_items: AlignItems::Center,
                     justify_content: JustifyContent::Center,
-                    gap: Size::all(Val::Px(10.)),
+                    padding: UiRect::all(Val::Px(20.)),
                     ..default()
                 },
                 background_color: BackgroundColor(Color::WHITE.with_a(0.6)),
@@ -95,23 +97,49 @@ pub fn win_screen(
             WinScreen,
         ))
         .with_children(|parent| {
+            let player = players.by_id(event.player).expect("valid player id");
             parent.spawn((TextBundle::from_section(
-                format!("Player {} won!", event.player),
+                format!("{} won!", player.name),
                 TextStyle {
                     font: fonts.fira_sans.clone(),
                     font_size: 48.0,
                     color: Color::BLACK,
                 },
             ),));
-            parent.spawn((TextBundle::from_section(
-                "Press R to restart",
-                TextStyle {
-                    font: fonts.fira_sans.clone(),
-                    font_size: 18.0,
-                    color: Color::DARK_GRAY,
-                },
-            ),));
+            parent
+                .spawn((
+                    ButtonBundle {
+                        style: Style {
+                            padding: UiRect::all(Val::Px(5.)),
+                            ..default()
+                        },
+                        background_color: BackgroundColor(Color::WHITE.with_a(0.5)),
+                        ..default()
+                    },
+                    OnPointer::<Over>::target_insert(BackgroundColor::from(
+                        Color::WHITE.with_a(0.8),
+                    )),
+                    OnPointer::<Click>::send_event::<ResetGameEvent>(),
+                ))
+                .with_children(|button| {
+                    let mut text = TextBundle::from_section(
+                        "Press R to restart",
+                        TextStyle {
+                            font: fonts.fira_sans.clone(),
+                            font_size: 18.0,
+                            color: Color::DARK_GRAY,
+                        },
+                    );
+                    text.focus_policy = FocusPolicy::Pass;
+                    button.spawn((text,));
+                });
         });
+}
+
+impl From<ListenedEvent<Click>> for ResetGameEvent {
+    fn from(_event: ListenedEvent<Click>) -> Self {
+        ResetGameEvent
+    }
 }
 
 pub fn win_screen_cleanup(mut commands: Commands, query: Query<Entity, With<WinScreen>>) {

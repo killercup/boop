@@ -20,8 +20,8 @@ impl Plugin for PlayerPlugin {
 
         app.add_systems(
             (
-                show_players.run_if(resource_added::<Players>()),
-                show_players.run_if(resource_changed::<Players>()),
+                show_players.run_if(resource_exists_and_changed::<Players>()),
+                show_current_player_indicator.run_if(resource_exists_and_changed::<Players>()),
                 next_player.run_if(on_event::<NextPlayer>()),
             )
                 .in_set(OnUpdate(GameState::Playing)),
@@ -36,6 +36,10 @@ struct PlayerInfoPanel;
 #[derive(Debug, Default, Component, Reflect)]
 #[reflect(Component)]
 struct PlayerInfo(PlayerId);
+
+#[derive(Debug, Default, Component, Reflect)]
+#[reflect(Component)]
+struct CurrentPlayerIndicator(PlayerId);
 
 fn setup(mut commands: Commands, fonts: Res<FontAssets>) {
     commands
@@ -82,6 +86,18 @@ fn setup(mut commands: Commands, fonts: Res<FontAssets>) {
                         }),
                         PlayerInfo(PlayerId::new(0)),
                     ));
+                    player1.spawn((
+                        NodeBundle {
+                            style: Style {
+                                size: Size::all(Val::Px(20.)),
+                                ..default()
+                            },
+                            background_color: BackgroundColor(Color::LIME_GREEN),
+                            visibility: Visibility::Visible,
+                            ..default()
+                        },
+                        CurrentPlayerIndicator(PlayerId::new(0)),
+                    ));
                 });
 
             panel
@@ -96,8 +112,8 @@ fn setup(mut commands: Commands, fonts: Res<FontAssets>) {
                     background_color: BackgroundColor(Color::ORANGE.with_a(0.5)),
                     ..default()
                 },))
-                .with_children(|player1| {
-                    player1.spawn((
+                .with_children(|player2| {
+                    player2.spawn((
                         TextBundle::from_section(
                             "6 kittens",
                             TextStyle {
@@ -112,6 +128,18 @@ fn setup(mut commands: Commands, fonts: Res<FontAssets>) {
                             ..default()
                         }),
                         PlayerInfo(PlayerId::new(1)),
+                    ));
+                    player2.spawn((
+                        NodeBundle {
+                            style: Style {
+                                size: Size::all(Val::Px(20.)),
+                                ..default()
+                            },
+                            background_color: BackgroundColor(Color::ORANGE),
+                            visibility: Visibility::Hidden,
+                            ..default()
+                        },
+                        CurrentPlayerIndicator(PlayerId::new(1)),
                     ));
                 });
         });
@@ -129,6 +157,20 @@ fn show_players(players: Res<Players>, mut info: Query<(&mut Text, &PlayerInfo)>
             format!("{} kittens", inventory.kittens),
             text.sections[0].style.clone(),
         );
+    }
+}
+
+fn show_current_player_indicator(
+    players: Res<Players>,
+    mut indicators: Query<(&mut Visibility, &CurrentPlayerIndicator)>,
+) {
+    let current = players.current().id;
+    for (mut vis, player) in indicators.iter_mut() {
+        *vis = if player.0 == current {
+            Visibility::Visible
+        } else {
+            Visibility::Hidden
+        };
     }
 }
 
