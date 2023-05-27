@@ -23,7 +23,6 @@ pub fn plan(
     for NewCat {
         cat: new_cat,
         position,
-        player,
         ..
     } in new_cats.iter()
     {

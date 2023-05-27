@@ -8,7 +8,6 @@ use crate::{
     events::NewCat,
     grid::{GridCell, Map, MapSettings},
     loading::CatModel,
-    players::PlayerId,
     GameState,
 };
 
