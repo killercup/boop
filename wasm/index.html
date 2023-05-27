@@ -3,13 +3,24 @@
   <head>
     <meta charset="utf-8" />
     <title>Boop</title>
+
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        background-color: #000;
+      }
+    </style>
   </head>
 
-  <body style="margin: 0px">
+  <body>
     <script type="module">
       import "./restart-audio-context.js";
       import init from "./bevy_game.js";
       init();
     </script>
+
+    <canvas id="bevy"></canvas>
   </body>
 </html>

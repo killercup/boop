@@ -2,7 +2,7 @@ use bevy::{log::LogPlugin, prelude::*};
 use tracing_subscriber::fmt::format::FmtSpan;
 
 fn main() {
-    install_tracing(cfg!(debug_assertions));
+    // install_tracing(cfg!(debug_assertions));
 
     let mut app = App::new();
     app.add_plugins(
@@ -16,8 +16,7 @@ fn main() {
                     ..default()
                 }),
                 ..default()
-            })
-            .disable::<LogPlugin>(),
+            }), // .disable::<LogPlugin>(),
     );
 
     #[cfg(feature = "dev")]
