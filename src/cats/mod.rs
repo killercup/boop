@@ -103,7 +103,7 @@ fn spawn_cats(
         ..
     } in new_cats.iter()
     {
-        let player_idx = if *player == PlayerId::new(0) { 0 } else { 1 };
+        let player_idx = player.0 as usize;
         let (mesh, material) = match cat {
             Cat::Kitten => (
                 assets_gltfmesh.get(&gltf.meshes[0]).unwrap().primitives[0]
@@ -137,7 +137,7 @@ fn spawn_cats(
 
         let mut transform = *cell_position;
         // cats should sit on top of the cell
-        transform.translation.y += settings.column_height;
+        transform.translation.y += settings.column_height / 2.;
         // make cats bigger!
         transform.scale = Vec3::splat(2.);
 
