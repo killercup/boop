@@ -2,7 +2,7 @@ use bevy::{log::LogPlugin, prelude::*};
 use tracing_subscriber::fmt::format::FmtSpan;
 
 fn main() {
-    #[cfg(not(target = "wasm32"))]
+    #[cfg(not(target_arch = "wasm32"))]
     install_tracing(cfg!(debug_assertions));
 
     let mut app = App::new();
@@ -18,7 +18,7 @@ fn main() {
             }),
             ..default()
         });
-        #[cfg(not(target = "wasm32"))]
+        #[cfg(not(target_arch = "wasm32"))]
         let x = x.disable::<LogPlugin>();
 
         x
